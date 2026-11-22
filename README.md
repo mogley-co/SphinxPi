@@ -13,9 +13,9 @@ SphinxPi v0.1.0 is based on the official DietPi Raspberry Pi 1 / Zero ARMv6 Debi
 
 ## Desktop direction
 
-SphinxPi uses XFCE as an optional desktop. The intended layout has a full-width top panel, with an application menu, window list, system tray and clock. The panel can be moved to the top with `sphinx desktop-layout`.
+SphinxPi uses a minimal LXDE desktop profile built around Openbox. LXPanel provides the top panel, PCManFM provides the file manager and desktop icons, and LXTerminal provides a terminal. The profile avoids XFCE and does not install a display manager or enable graphical autologin.
 
-The original Pi Zero W has 512 MB RAM and a single-core ARMv6 CPU. Debian Trixie provides XFCE packages for armel and armhf, but performance will be limited. The desktop installer checks the OS release, architecture and free disk space before asking for confirmation.
+The original Pi Zero W has 512 MB RAM and a single-core ARMv6 CPU. Debian Trixie provides LXDE components for the original Pi's armel architecture. Performance will still be limited, especially with browsers or several applications open.
 
 ## Install the SphinxPi command
 
@@ -31,15 +31,15 @@ sudo sh scripts/install.sh
 sudo sphinx desktop-install
 ```
 
-This installs XFCE, Xorg, LightDM components and selected desktop utilities. It does not enable LightDM, change the default boot target, replace the kernel, or alter partitions.
+This installs Xorg, Xinit, LXDE core and lightweight desktop utilities. It does not enable a display manager, automatic graphical login, change the default boot target, replace the kernel, or alter partitions.
 
-After installation, start XFCE from the text console:
+After installation, start LXDE from a normal non-root account:
 
 ```sh
 sphinx desktop
 ```
 
-Inside the graphical session, move the existing XFCE panel to the top:
+Inside the graphical session, move the LXPanel to the top:
 
 ```sh
 sphinx desktop-layout
