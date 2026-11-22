@@ -21,10 +21,7 @@ fi
 ARCH=$(dpkg --print-architecture)
 case "$ARCH" in
     armel|armhf) ;;
-    *)
-        echo "Unsupported Debian architecture: $ARCH"
-        exit 1
-        ;;
+    *) echo "Unsupported Debian architecture: $ARCH"; exit 1 ;;
 esac
 
 FREE_KB=$(df -Pk / | awk 'NR==2 {print $4}')
@@ -36,8 +33,9 @@ fi
 
 echo "SphinxPi XFCE desktop profile"
 echo "Architecture: $ARCH"
-echo "This will install XFCE, Xorg, LightDM components and desktop utilities."
+echo "This installs XFCE, Xorg, LightDM components and desktop utilities."
 echo "It will NOT enable automatic graphical login or change the default boot target."
+echo "Network configuration is left untouched to protect your existing Wi-Fi connection."
 echo "The Pi Zero W may feel slow with a full desktop."
 printf "Continue? [y/N] "
 read answer
@@ -48,9 +46,30 @@ esac
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install --no-install-recommends     xserver-xorg     xinit     dbus-x11     xfce4     xfce4-goodies     lightdm     thunar     thunar-volman     file-roller     xfce4-terminal     mousepad     ristretto     pavucontrol     network-manager-gnome     xfce4-pulseaudio-plugin     xfce4-whiskermenu-plugin     xfce4-taskmanager     xfce4-screenshooter     fonts-dejavu     adwaita-icon-theme
+apt-get install --no-install-recommends \
+    xserver-xorg \
+    xinit \
+    dbus-x11 \
+    xfce4 \
+    xfce4-goodies \
+    lightdm \
+    thunar \
+    thunar-volman \
+    file-roller \
+    xfce4-terminal \
+    mousepad \
+    ristretto \
+    pavucontrol \
+    xfce4-pulseaudio-plugin \
+    xfce4-whiskermenu-plugin \
+    xfce4-taskmanager \
+    xfce4-screenshooter \
+    xfce4-notifyd \
+    xfce4-screensaver \
+    fonts-dejavu \
+    adwaita-icon-theme
 
 echo
 echo "XFCE desktop packages installed."
-echo "The existing text login and boot target were left unchanged."
-echo "Log in as your normal user, then run: sphinx desktop"
+echo "The existing text login, Wi-Fi configuration and boot target were left unchanged."
+echo "Create/use a normal non-root account, log in as that account, then run: sphinx desktop"
