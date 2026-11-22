@@ -25,18 +25,19 @@ case "$ARCH" in
 esac
 
 FREE_KB=$(df -Pk / | awk 'NR==2 {print $4}')
-if [ -z "$FREE_KB" ] || [ "$FREE_KB" -lt 1800000 ]; then
-    echo "At least 1.8 GB of free space is required. Nothing changed."
+if [ -z "$FREE_KB" ] || [ "$FREE_KB" -lt 1200000 ]; then
+    echo "At least 1.2 GB of free space is required. Nothing changed."
     df -h /
     exit 1
 fi
 
-echo "SphinxPi XFCE desktop profile"
+echo "SphinxPi lightweight desktop profile"
+echo "Desktop: LXDE core (Openbox, LXPanel and PCManFM)"
 echo "Architecture: $ARCH"
-echo "This installs XFCE, Xorg, LightDM components and desktop utilities."
+echo "This installs Xorg, Xinit, LXDE core and lightweight utilities."
 echo "It will NOT enable automatic graphical login or change the default boot target."
 echo "Network configuration is left untouched to protect your existing Wi-Fi connection."
-echo "The Pi Zero W may feel slow with a full desktop."
+echo "The original Pi Zero W has limited RAM and CPU; avoid running many apps together."
 printf "Continue? [y/N] "
 read answer
 case "$answer" in
@@ -50,26 +51,15 @@ apt-get install --no-install-recommends \
     xserver-xorg \
     xinit \
     dbus-x11 \
-    xfce4 \
-    xfce4-goodies \
-    lightdm \
-    thunar \
-    thunar-volman \
-    file-roller \
-    xfce4-terminal \
-    mousepad \
-    ristretto \
-    pavucontrol \
-    xfce4-pulseaudio-plugin \
-    xfce4-whiskermenu-plugin \
-    xfce4-taskmanager \
-    xfce4-screenshooter \
-    xfce4-notifyd \
-    xfce4-screensaver \
+    lxde-core \
+    lxterminal \
+    lxappearance \
+    lxtask \
+    lxrandr \
     fonts-dejavu \
     adwaita-icon-theme
 
 echo
-echo "XFCE desktop packages installed."
-echo "The existing text login, Wi-Fi configuration and boot target were left unchanged."
+echo "Lightweight LXDE desktop packages installed."
+echo "No display manager, automatic login, boot target or network settings were changed."
 echo "Create/use a normal non-root account, log in as that account, then run: sphinx desktop"
