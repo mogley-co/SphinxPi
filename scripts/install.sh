@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+SOURCE="$ROOT_DIR/src/sphinx"
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Please run this installer with sudo:"
+    echo "  sudo sh scripts/install.sh"
+    exit 1
+fi
+
+if [ ! -f /etc/os-release ]; then
+    echo "Cannot identify the operating system. Nothing changed."
+    exit 1
+fi
+
+. /etc/os-release
+case "${ID:-}" in
+    debian) ;;
+    *) echo "SphinxPi currently supports Debian-based DietPi only."; echo "Detected: ${PRETTY_NAME:-unknown}"; exit 1 ;;
+esac
+
+MACHINE=$(uname -m)
+case "$MACHINE" in
+    armv6l|armv7l|aarch64|x86_64) ;;
+    *) echo "Unsupported CPU architecture: $MACHINE"; exit 1 ;;
+esac
+
+[ -f "$SOURCE" ] || { echo "Missing CLI source: $SOURCE"; exit 1; }
+
+DEST="/usr/local/bin/sphinx"
+CONFIG_DIR="/etc/sphinxpi"
+if [ -e "$DEST" ]; then
+    BACKUP="$DEST.backup.$(date +%Y%m%d%H%M%S)"
+    cp -p "$DEST" "$BACKUP"
+    echo "Existing command backed up to: $BACKUP"
+fi
+
+install -D -m 0755 "$SOURCE" "$DEST"
+mkdir -p "$CONFIG_DIR"
+if [ ! -f "$CONFIG_DIR/version" ]; then
+    printf '%s\n' "0.1.0" > "$CONFIG_DIR/version"
+fi
+
+echo "SphinxPi CLI installed."
+echo "No packages, boot files, kernel, firmware, or partitions were changed."
+echo "Try: sphinx help"
