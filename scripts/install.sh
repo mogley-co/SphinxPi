@@ -29,9 +29,13 @@ case "$MACHINE" in
 esac
 
 [ -f "$SOURCE" ] || { echo "Missing CLI source: $SOURCE"; exit 1; }
+[ -f "$SCRIPT_DIR/desktop-install.sh" ] || { echo "Missing desktop installer."; exit 1; }
+[ -f "$SCRIPT_DIR/desktop-layout.sh" ] || { echo "Missing desktop layout helper."; exit 1; }
 
 DEST="/usr/local/bin/sphinx"
+LIB_DIR="/usr/lib/sphinxpi"
 CONFIG_DIR="/etc/sphinxpi"
+
 if [ -e "$DEST" ]; then
     BACKUP="$DEST.backup.$(date +%Y%m%d%H%M%S)"
     cp -p "$DEST" "$BACKUP"
@@ -39,6 +43,9 @@ if [ -e "$DEST" ]; then
 fi
 
 install -D -m 0755 "$SOURCE" "$DEST"
+install -d -m 0755 "$LIB_DIR"
+install -m 0755 "$SCRIPT_DIR/desktop-install.sh" "$LIB_DIR/desktop-install.sh"
+install -m 0755 "$SCRIPT_DIR/desktop-layout.sh" "$LIB_DIR/desktop-layout.sh"
 mkdir -p "$CONFIG_DIR"
 if [ ! -f "$CONFIG_DIR/version" ]; then
     printf '%s\n' "0.1.0" > "$CONFIG_DIR/version"
