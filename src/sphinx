@@ -14,9 +14,9 @@ Usage:
   sphinx version          Show SphinxPi version
   sphinx info             Show system and hardware information
   sudo sphinx desktop-install
-                          Install the optional XFCE desktop
-  sphinx desktop          Start XFCE from a normal user account
-  sphinx desktop-layout   Move the XFCE panel to the top
+                          Install the lightweight LXDE desktop
+  sphinx desktop          Start LXDE from a normal user account
+  sphinx desktop-layout   Move the LXPanel to the top
 
 The desktop is optional. The text login remains available.
 EOF
@@ -62,15 +62,15 @@ case "${1:-help}" in
             echo "Create/log in to a normal user account, then run: sphinx desktop"
             exit 1
         fi
-        if ! command -v startx >/dev/null 2>&1; then
-            echo "XFCE is not installed. Run: sudo sphinx desktop-install"
+        if ! command -v startx >/dev/null 2>&1 || [ ! -x /usr/bin/startlxde ]; then
+            echo "LXDE is not installed. Run: sudo sphinx desktop-install"
             exit 1
         fi
-        exec startx /usr/bin/startxfce4
+        exec startx /usr/bin/startlxde
         ;;
     desktop-layout)
         if [ "$(id -u)" -eq 0 ]; then
-            echo "Run this command from your normal user's XFCE session, not as root."
+            echo "Run this command from your normal user's LXDE session, not as root."
             exit 1
         fi
         [ -x /usr/lib/sphinxpi/desktop-layout.sh ] || { echo "Desktop layout helper missing. Reinstall SphinxPi CLI."; exit 1; }
