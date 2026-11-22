@@ -1,0 +1,53 @@
+#!/bin/sh
+set -eu
+
+VERSION_FILE="/etc/sphinxpi/version"
+VERSION="0.1.0"
+[ ! -r "$VERSION_FILE" ] || VERSION=$(cat "$VERSION_FILE")
+
+show_help() {
+    cat <<'EOF'
+SphinxPi - Raspberry Pi system layer
+
+Usage:
+  sphinx help       Show this help
+  sphinx version    Show SphinxPi version
+  sphinx info       Show system and hardware information
+
+More commands will be added after they have been tested safely.
+EOF
+}
+
+show_info() {
+    echo "SphinxPi $VERSION"
+    echo "----------------"
+    if [ -r /etc/os-release ]; then
+        . /etc/os-release
+        echo "OS: ${PRETTY_NAME:-unknown}"
+    else
+        echo "OS: unknown"
+    fi
+    echo "Kernel: $(uname -r)"
+    echo "Architecture: $(uname -m)"
+    echo "Hostname: $(hostname)"
+    if [ -r /proc/device-tree/model ]; then
+        MODEL=$(tr -d '\000' </proc/device-tree/model)
+        echo "Hardware: $MODEL"
+    else
+        echo "Hardware: unavailable"
+    fi
+    if [ -r /proc/meminfo ]; then
+        awk '/MemTotal|MemAvailable/ {print $1, int($2/1024) " MB"}' /proc/meminfo
+    fi
+    if command -v df >/dev/null 2>&1; then
+        echo "Root filesystem:"
+        df -h /
+    fi
+}
+
+case "${1:-help}" in
+    help|-h|--help) show_help ;;
+    version|-v|--version) echo "SphinxPi $VERSION" ;;
+    info) show_info ;;
+    *) echo "Unknown or not-yet-implemented command: $1" >&2; echo "Run 'sphinx help'." >&2; exit 2 ;;
+esac
