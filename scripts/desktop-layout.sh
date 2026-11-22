@@ -23,8 +23,11 @@ if [ -z "$PANEL" ]; then
     exit 1
 fi
 
-xfconf-query -c xfce4-panel -p "/panels/$PANEL/position" --create -t string -s "p=6;x=0;y=0"
-xfconf-query -c xfce4-panel -p "/panels/$PANEL/position-locked" --create -t bool -s true
-xfconf-query -c xfce4-panel -p "/panels/$PANEL/size" --create -t uint -s 28
+BASE="/panels/$PANEL"
+xfconf-query -c xfce4-panel -p "$BASE/position" --create -t string -s "p=6;x=0;y=0"
+xfconf-query -c xfce4-panel -p "$BASE/position-locked" --create -t bool -s true
+xfconf-query -c xfce4-panel -p "$BASE/size" --create -t uint -s 28
+xfconf-query -c xfce4-panel -p "$BASE/length" --create -t uint -s 100
+xfconf-query -c xfce4-panel -p "$BASE/length-adjust" --create -t bool -s false
 xfce4-panel -r
-echo "Moved $PANEL to the top edge."
+echo "Moved $PANEL to the top edge and set it to full width."
