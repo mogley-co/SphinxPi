@@ -10,11 +10,15 @@ show_help() {
 SphinxPi - Raspberry Pi system layer
 
 Usage:
-  sphinx help       Show this help
-  sphinx version    Show SphinxPi version
-  sphinx info       Show system and hardware information
+  sphinx help             Show this help
+  sphinx version          Show SphinxPi version
+  sphinx info             Show system and hardware information
+  sudo sphinx desktop-install
+                          Install the optional XFCE desktop
+  sphinx desktop          Start XFCE from the text console
+  sphinx desktop-layout   Move the XFCE panel to the top
 
-More commands will be added after they have been tested safely.
+The desktop is optional. The text login remains available.
 EOF
 }
 
@@ -29,6 +33,7 @@ show_info() {
     fi
     echo "Kernel: $(uname -r)"
     echo "Architecture: $(uname -m)"
+    echo "Debian architecture: $(dpkg --print-architecture 2>/dev/null || echo unknown)"
     echo "Hostname: $(hostname)"
     if [ -r /proc/device-tree/model ]; then
         MODEL=$(tr -d '\000' </proc/device-tree/model)
@@ -39,15 +44,32 @@ show_info() {
     if [ -r /proc/meminfo ]; then
         awk '/MemTotal|MemAvailable/ {print $1, int($2/1024) " MB"}' /proc/meminfo
     fi
-    if command -v df >/dev/null 2>&1; then
-        echo "Root filesystem:"
-        df -h /
-    fi
+    echo "Root filesystem:"
+    df -h /
 }
 
 case "${1:-help}" in
     help|-h|--help) show_help ;;
     version|-v|--version) echo "SphinxPi $VERSION" ;;
     info) show_info ;;
-    *) echo "Unknown or not-yet-implemented command: $1" >&2; echo "Run 'sphinx help'." >&2; exit 2 ;;
+    desktop-install)
+        [ -x /usr/lib/sphinxpi/desktop-install.sh ] || { echo "Desktop installer missing. Reinstall SphinxPi CLI."; exit 1; }
+        exec /usr/lib/sphinxpi/desktop-install.sh
+        ;;
+    desktop)
+        if ! command -v startx >/dev/null 2>&1; then
+            echo "XFCE is not installed. Run: sudo sphinx desktop-install"
+            exit 1
+        fi
+        exec startx /usr/bin/startxfce4
+        ;;
+    desktop-layout)
+        [ -x /usr/lib/sphinxpi/desktop-layout.sh ] || { echo "Desktop layout helper missing. Reinstall SphinxPi CLI."; exit 1; }
+        exec /usr/lib/sphinxpi/desktop-layout.sh
+        ;;
+    *)
+        echo "Unknown or not-yet-implemented command: $1" >&2
+        echo "Run 'sphinx help'." >&2
+        exit 2
+        ;;
 esac
