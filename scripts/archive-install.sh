@@ -2,7 +2,7 @@
 set -eu
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "Run this command as root. On DietPi, log in as root and run: sphinx archive-install"
+    echo "Run this command as root, or use: sudo sphinx archive-install"
     exit 1
 fi
 
@@ -25,7 +25,7 @@ if [ "$ARCH" != "armel" ] || [ "$(uname -m)" != "armv6l" ]; then
 fi
 
 echo "SphinxPi Archive Manager installer"
-echo "This installs Archive Manager dependencies: whiptail, ZIP tools, 7-Zip, TAR, gzip, bzip2, zstd and lz4 for Debian Trixie ($ARCH)."
+echo "This installs Archive Manager dependencies: whiptail, ZIP tools, 7-Zip, TAR, gzip, bzip2, zstd and lz4 for Debian 13+ ($ARCH)."
 echo "The Debian 7zip package provides the '7z' command."
 echo "RAR extraction is enabled when the optional 7zip-rar package is available from your configured repositories; RAR creation is not supported."
 echo "It does not change boot, kernel, firmware, partitions or network settings."
@@ -46,7 +46,7 @@ if [ -n "$RAR_CANDIDATE" ] && [ "$RAR_CANDIDATE" != "(none)" ]; then
 else
     echo "RAR extraction plugin is unavailable in the configured APT repositories."
 fi
-sh /usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
+sh sh /usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
 apt-get install -y --no-install-recommends $ARCHIVE_PACKAGES
 
 echo
