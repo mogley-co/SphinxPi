@@ -29,7 +29,7 @@ Build it from a checkout:
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
 sh scripts/build-deb.sh
-sudo apt install ./dist/sphinxpi_0.1.1_all.deb
+sudo apt install ./dist/sphinxpi_0.1.2_all.deb
 ```
 
 Or build and install in one step:
@@ -38,9 +38,12 @@ Or build and install in one step:
 sh scripts/install.sh
 ```
 
-To upgrade, build the newer package and install the new `.deb` with
-`sudo apt install ./dist/sphinxpi_VERSION_all.deb`. A package upgrade replaces
-the old Debian-managed files. The package's pre-install step also removes the
+To update directly on the Pi, run `sudo sphinx update` (or `sphinx update`
+from a normal account). It downloads the latest `main` branch from the official
+GitHub repository, builds the Debian package locally, and installs it with APT.
+A working internet connection and `curl` or `wget` are required. You can also
+build and install a newer `.deb` manually. A package upgrade replaces the old
+Debian-managed files. The package's pre-install step also removes the
 legacy `/usr/local/bin/sphinx` command so it cannot shadow the new
 `/usr/bin/sphinx` command.
 
@@ -102,6 +105,7 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 - `sphinx help`
 - `sphinx info`
 - `sphinx version`
+- `sphinx update` (downloads and installs the latest GitHub version)
 - `sphinx network-check`
 - `sphinx desktop-install` (run as root; use `sudo` from a normal account)
 - `sphinx desktop`
@@ -112,13 +116,14 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 
 ## Uninstall
 
-Use Debian's package manager:
+Run:
 
 ```sh
-sudo apt remove sphinxpi
+sphinx uninstall
 ```
 
-Or run `sphinx uninstall`. This invokes the same package-manager removal.
+This invokes `apt-get remove sphinxpi` (using sudo when needed). You can also
+run `sudo apt remove sphinxpi` directly.
 Optional LXDE and archive packages are intentionally not removed because they
 may be used by other software. No personal files, boot files, kernel, firmware
 or partitions are changed.
