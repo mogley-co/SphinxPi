@@ -1,17 +1,23 @@
-name: Shell syntax
+name: Debian package validation
 
 on:
   push:
   pull_request:
 
 jobs:
-  syntax:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Validate POSIX shell scripts
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
         shell: sh
         run: |
           set -eu
-          find scripts src -type f -exec sh -n {} \;
+          find scripts src -type f -name '*.sh' -o -path 'src/sphinx' | while IFS= read -r file; do
+            sh -n "$file"
+          done
+      - name: Build Debian package
+        run: |
+          sh scripts/build-deb.sh
+          dpkg-deb --info dist/sphinxpi_*.deb
+          dpkg-deb --contents dist/sphinxpi_*.deb
