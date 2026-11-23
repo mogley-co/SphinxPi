@@ -21,7 +21,8 @@ Usage:
   sphinx desktop-layout   Move LXPanel to the top
   sphinx archive-install  Install optional archive tools (root required)
   sphinx archive          Open Archive Manager
-  sphinx uninstall        Remove SphinxPi using Debian's package manager
+  sphinx uninstall        Remove SphinxPi (add -f for full system removal)
+  sphinx ui               Open the SphinxPi management menu
 
 Normal Debian package commands:
   sudo apt install ./sphinxpi_VERSION_all.deb
@@ -123,14 +124,17 @@ case "${1:-help}" in
         run_helper archive-manager.sh
         ;;
     uninstall)
-        if [ "$(id -u)" -eq 0 ]; then
-            exec apt-get remove sphinxpi
-        elif command -v sudo >/dev/null 2>&1; then
-            exec sudo apt-get remove sphinxpi
-        else
-            echo "Use the Debian package manager as root: apt-get remove sphinxpi" >&2
-            exit 1
-        fi
+        mode=normal
+        if [ "${2:-}" = "-f" ] || [ "${2:-}" = "--full" ]; then mode=full
+        elif [ -n "${2:-}" ]; then echo 'Usage: sphinx uninstall [-f|--full]'; exit 2; fi
+        if [ "$(id -u)" -eq 0 ]; then exec "$LIB_DIR/remove.sh" "$mode"
+        elif command -v sudo >/dev/null 2>&1; then exec sudo "$LIB_DIR/remove.sh" "$mode"
+        else echo 'Use: sudo sphinx uninstall [-f]'; exit 1; fi
+        ;;
+    ui)
+        command -v whiptail >/dev/null 2>&1 || { echo 'Install the UI with: sudo apt install whiptail'; exit 1; }
+        choice=$(whiptail --title 'SphinxPi Control Center' --menu 'Choose an action' 15 62 5 update 'Update SphinxPi' remove 'Uninstall SphinxPi' full 'Full system removal' version 'Show installed version' 3>&1 1>&2 2>&3) || exit 0
+        case "$choice" in update) exec "$0" update ;; remove) exec "$0" uninstall ;; full) exec "$0" uninstall -f ;; version) exec "$0" version ;; esac
         ;;
     *)
         echo "Unknown command: $1" >&2
