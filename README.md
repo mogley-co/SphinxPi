@@ -59,7 +59,7 @@ Open the interactive terminal menu:
 sphinx archive
 ```
 
-The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.XZ and TAR.BZ2 creation; extraction; content listing; and archive testing. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. Debian's 7zip package provides the `7z` command used by SphinxPi. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
+The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.XZ and TAR.BZ2 creation; extraction; content listing; and archive testing. When replacing an existing archive, SphinxPi builds a temporary file first and only replaces the old archive after successful creation. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. Debian's 7zip package provides the `7z` command used by SphinxPi. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
 
 **Password note:** AES-256 is used for password-protected ZIP and 7Z archives through 7-Zip. Passwords are requested interactively rather than placed directly in the command line. TAR-based formats do not support built-in password encryption. Keep your password safe; encrypted archives cannot be recovered if it is lost.
 
@@ -79,11 +79,21 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 - `sphinx info`
 - `sphinx version`
 - `sphinx network-check`
-- `sudo sphinx desktop-install`
+- `sphinx desktop-install` (run as root; use `sudo` from a normal account)
 - `sphinx desktop`
 - `sphinx desktop-layout`
-- `sudo sphinx archive-install`
+- `sphinx archive-install` (run as root; use `sudo` from a normal account)
 - `sphinx archive`
+- `sphinx uninstall` (run as root; removes SphinxPi files only)
+
+## Uninstall
+
+From the repository directory, run `sh scripts/uninstall.sh` as root, or
+`sudo sh scripts/uninstall.sh` from a normal account. You can also run
+`sphinx uninstall` after installation. The script asks for confirmation.
+It removes the SphinxPi CLI, helper scripts and `/etc/sphinxpi` configuration.
+It deliberately leaves LXDE, Xorg, archive utilities, personal files and all
+boot/kernel/firmware/partition settings untouched.
 
 ## Safety
 
