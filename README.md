@@ -1,21 +1,28 @@
 # SphinxPi
 
-A lightweight, safety-first custom OS layer for the original Raspberry Pi Zero family.
+A lightweight, safety-first command-line system toolkit for Debian-based systems.
 
-**Target hardware:** Raspberry Pi Zero / Zero W / Zero WH (ARMv6, 512 MB RAM).
+**Supported operating systems:** Debian 13 (Trixie) and newer, plus Debian-based Raspberry Pi OS releases based on Debian 13 or newer.
 
-## Base image
+**Architecture support:** the SphinxPi package is architecture-independent. Individual applications and optional tools are checked against the configured APT repositories, so availability depends on CPU architecture (armel, armhf, arm64, amd64, etc.), Debian release and enabled repositories.
 
-SphinxPi is based on the official DietPi Raspberry Pi 1 / Zero ARMv6 Debian 13 (Trixie) image.
+SphinxPi is not a Linux distribution and does not replace the host operating system, kernel, bootloader or package manager. It installs optional system-management tools on an existing supported Debian installation. It does not require DietPi.
 
-- Image: [DietPi_RPi1-ARMv6-Trixie.img.xz](https://github.com/mogley-co/SphinxPi/releases/download/v0.1.0/DietPi_RPi1-ARMv6-Trixie.img.xz)
-- Release asset SHA-256: `f95e0315df7d28d3514aaa03fd28759d5afd4666d7b3a358dd9269bdde93f79e`
+## Supported platform requirements
 
-## Desktop direction
+- Debian 13 (Trixie) or newer.
+- Debian-based Raspberry Pi OS releases based on Debian 13 or newer.
+- A working apt / dpkg environment.
+- Root access for installation and system-changing actions.
+- CPU architecture is not hard-coded. APT candidates are checked before optional packages are installed.
 
-SphinxPi uses a minimal LXDE desktop profile built around Openbox. LXPanel provides the top panel, PCManFM provides the file manager and desktop icons, and LXTerminal provides a terminal. The profile avoids XFCE and does not install a display manager or enable graphical autologin.
+Older Debian releases, Ubuntu, Alpine, Arch Linux and non-Debian package systems are not currently supported by the installer.
 
-The original Pi Zero W has 512 MB RAM and a single-core ARMv6 CPU. Debian Trixie provides LXDE components for the original Pi's armel architecture. Performance will still be limited, especially with browsers or several applications open.
+## Optional desktop profile
+
+SphinxPi can optionally install a lightweight LXDE desktop profile built around Openbox. LXPanel provides the panel, PCManFM provides the file manager and desktop icons, and LXTerminal provides a terminal. It does not install a display manager, enable graphical autologin or change the default boot target.
+
+This is an optional profile, not a requirement. Desktop performance and package availability depend on the hardware and architecture. On the original Raspberry Pi Zero (ARMv6, 512 MB RAM), graphical performance is limited; SphinxPi's core terminal tools are the recommended experience.
 
 ## Install the SphinxPi Debian package
 
@@ -69,7 +76,7 @@ sphinx desktop-layout
 
 ## Archive Manager
 
-Archive Manager dependencies are installed automatically by `sphinx update`.
+Available Archive Manager dependencies are installed automatically by `sphinx update`.
 You can also install or repair them separately:
 
 ```sh
@@ -87,7 +94,7 @@ When launched through sudo, it runs the interactive manager as the original
 sudo user so files created by the manager are not unnecessarily owned by root.
 When logged in directly as root, it runs as root.
 
-The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2, TAR.ZST and TAR.LZ4 creation; extraction; content listing; and archive testing. RAR archives can be extracted, listed and tested when the optional Debian `7zip-rar` plugin is available from the configured APT repositories. RAR creation is not supported by 7-Zip. When replacing an existing archive, SphinxPi builds a temporary file first and only replaces the old archive after successful creation. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. The installer and updater install and verify the required tools (`whiptail`, `zip`, `unzip`, `7zip`, `tar`, `gzip`, `bzip2`, `zstd` and `lz4`), so the manager does not depend on these utilities already being present. Debian's 7zip package provides the `7z` command used by SphinxPi. The optional `7zip-rar` plugin is installed automatically only when it is available in the configured repositories. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
+The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2, TAR.ZST and TAR.LZ4 creation; extraction; content listing; and archive testing. RAR archives can be extracted, listed and tested when the optional Debian `7zip-rar` plugin is available from the configured APT repositories. RAR creation is not supported by 7-Zip. When replacing an existing archive, SphinxPi builds a temporary file first and only replaces the old archive after successful creation. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. The installer and updater check package availability for the current architecture before installing core tools; optional compression tools are skipped when unavailable. Debian's 7zip package provides the `7z` command used by SphinxPi. The optional `7zip-rar` plugin is installed automatically only when it is available in the configured repositories. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
 
 **Password note:** AES-256 is used for password-protected ZIP and 7Z archives through 7-Zip. Passwords are requested interactively rather than placed directly in the command line. TAR-based formats do not support built-in password encryption. Keep your password safe; encrypted archives cannot be recovered if it is lost.
 
@@ -126,11 +133,7 @@ candidate exists for the configured architecture and records newly installed
 packages for SphinxPi's full-removal process. The manager does not silently
 install a full compiler or runtime during a normal SphinxPi update.
 
-**ARMv6 note:** the original Pi Zero uses a 32-bit ARMv6 CPU and 512 MB RAM.
-Availability and versions of Node.js, pipx and other packages depend on the
-Debian Trixie `armel` repositories configured on the device. The manager
-checks APT candidates before installation; it cannot make an incompatible
-upstream binary run on ARMv6.
+**Architecture note:** runtime and package availability depends on the architecture and enabled repositories. SphinxPi checks APT candidates before installation; it cannot make an incompatible upstream binary run on an unsupported CPU architecture.
 
 ## System Manager and Install Apps
 
@@ -158,7 +161,7 @@ The System Manager includes:
 
 The app catalogue includes development tools (Git, compilers, Python, Node.js, PHP and more), editors, terminal tools, network utilities, monitoring, archives, databases, IoT utilities, media tools and optional desktop applications. The catalogue is a list of Debian package names, not a guarantee that every package exists for every architecture or repository configuration. Packages without an APT candidate are skipped; large packages and services should be selected deliberately. SphinxPi does not automatically install the catalogue during an update.
 
-**ARMv6 / memory note:** the original Pi Zero has a single ARMv6 CPU and 512 MB RAM. The catalogue contains packages for several use cases, but some may be unavailable for Debian's `armel` architecture or may be too resource-intensive for this hardware. Check package suitability before installing databases, compilers, desktop applications or server services. The Resource Monitor uses a snapshot by default to avoid a permanent background process.
+**Architecture / resource note:** catalogue packages are not guaranteed to exist for every CPU architecture or repository configuration. Some packages may also be resource-intensive on small devices. Check package suitability before installing databases, compilers, desktop applications or server services. The Resource Monitor uses a snapshot by default to avoid a permanent background process.
 
 ## Network diagnostics
 
@@ -175,7 +178,7 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 - `sphinx help`
 - `sphinx info`
 - `sphinx version`
-- `sphinx update` (downloads and installs the latest GitHub version and Archive Manager dependencies)
+- `sphinx update` (downloads and installs the latest GitHub version and available Archive Manager dependencies)
 - `sphinx network-check`
 - `sphinx desktop-install` (run as root; use `sudo` from a normal account)
 - `sphinx desktop`
