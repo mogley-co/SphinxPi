@@ -3,7 +3,7 @@ set -eu
 
 APP="SphinxPi Archive Manager"
 
-for cmd in tar gzip bzip2 du basename mkdir find realpath; do
+for cmd in tar gzip bzip2 zstd lz4 du basename mkdir find realpath; do
     command -v "$cmd" >/dev/null 2>&1 || {
         echo "Missing required command: $cmd"
         exit 1
