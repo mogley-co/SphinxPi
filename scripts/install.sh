@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+sh "$ROOT/scripts/platform-check.sh"
 sh "$ROOT/scripts/build-deb.sh"
 VERSION=$(cat "$ROOT/VERSION")
 PACKAGE="$ROOT/dist/sphinxpi_${VERSION}_all.deb"
