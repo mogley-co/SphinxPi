@@ -143,6 +143,10 @@ create_archive() {
     output=$(ask "Output archive path" "$PWD/$base$ext") || return 0
     output=$(expand_path "$output")
     [ -n "$output" ] || return 0
+    case "$output" in
+        *"$ext") ;;
+        *) output="$output$ext" ;;
+    esac
     source_real=$(realpath -e -- "$source") || { message "Could not resolve the source path."; return 0; }
     output_real=$(realpath -m -- "$output") || { message "Could not resolve the output path."; return 0; }
     if [ "$source_real" = "$output_real" ]; then message "The archive output cannot overwrite its source."; return 0; fi
@@ -159,7 +163,7 @@ create_archive() {
     fi
 
     final_output=$output
-    tmp_output=$(mktemp "$output_dir/.sphinxpi-archive.XXXXXX") || { message "Could not create a temporary output file."; return 0; }
+    tmp_output=$(mktemp --suffix="$ext" "$output_dir/.sphinxpi-archive.XXXXXX") || { message "Could not create a temporary output file."; return 0; }
     rm -f -- "$tmp_output"
     output=$tmp_output
 
