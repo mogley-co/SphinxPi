@@ -29,7 +29,7 @@ Build it from a checkout:
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
 sh scripts/build-deb.sh
-sudo apt install ./dist/sphinxpi_0.2.0_all.deb
+sudo apt install ./dist/sphinxpi_0.3.0_all.deb
 ```
 
 Or build and install in one step:
@@ -131,6 +131,34 @@ Availability and versions of Node.js, pipx and other packages depend on the
 Debian Trixie `armel` repositories configured on the device. The manager
 checks APT candidates before installation; it cannot make an incompatible
 upstream binary run on ARMv6.
+
+## System Manager and Install Apps
+
+Open the System Manager from the Control Center or directly:
+
+```sh
+sphinx system
+# Or open an individual tool:
+sphinx monitor
+sphinx backup
+sphinx network
+sphinx services
+sphinx logs
+sphinx apps
+```
+
+The System Manager includes:
+
+- **Resource Monitor:** a lightweight system snapshot showing CPU load, temperature when exposed, RAM, swap, disk usage, top processes and network interfaces. If `btop` is installed, it opens the live monitor instead.
+- **Backup Manager:** create TAR.GZ backups of a selected folder and restore into a new or empty directory. Existing backup files are never overwritten. Restore checks reject absolute and parent-directory paths.
+- **Network Manager:** inspect interfaces, addresses, routes, DNS, internet reachability and SSH service state. It is diagnostic-only and does not alter network configuration.
+- **Service Manager:** list services, inspect status, and start, stop, restart, enable or disable a selected systemd service after confirmation.
+- **Log Viewer:** inspect recent system journal entries, boot warnings/errors or logs for a selected service.
+- **Install Apps:** search a catalogue of 159 Debian package entries by package name, category or description. Installed packages are marked `[INSTALLED]` and preselected in the checklist. Select packages with SPACE and press ENTER to install. SphinxPi refreshes APT indexes, checks each selected package for an available candidate on the current architecture, skips unavailable packages and tracks newly installed packages for full removal.
+
+The app catalogue includes development tools (Git, compilers, Python, Node.js, PHP and more), editors, terminal tools, network utilities, monitoring, archives, databases, IoT utilities, media tools and optional desktop applications. The catalogue is a list of Debian package names, not a guarantee that every package exists for every architecture or repository configuration. Packages without an APT candidate are skipped; large packages and services should be selected deliberately. SphinxPi does not automatically install the catalogue during an update.
+
+**ARMv6 / memory note:** the original Pi Zero has a single ARMv6 CPU and 512 MB RAM. The catalogue contains packages for several use cases, but some may be unavailable for Debian's `armel` architecture or may be too resource-intensive for this hardware. Check package suitability before installing databases, compilers, desktop applications or server services. The Resource Monitor uses a snapshot by default to avoid a permanent background process.
 
 ## Network diagnostics
 
