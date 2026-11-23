@@ -3,11 +3,6 @@ set -eu
 
 APP="SphinxPi Archive Manager"
 
-if [ "$(id -u)" -eq 0 ]; then
-    echo "Run the archive manager as your normal user, not root."
-    exit 1
-fi
-
 for cmd in tar gzip xz bzip2 du basename mkdir find realpath; do
     command -v "$cmd" >/dev/null 2>&1 || {
         echo "Missing required command: $cmd"
