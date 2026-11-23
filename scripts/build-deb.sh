@@ -18,7 +18,7 @@ PKGROOT="$WORK/$PACKAGE"
 mkdir -p "$PKGROOT/DEBIAN" "$PKGROOT/usr/bin" "$PKGROOT/usr/lib/sphinxpi" "$PKGROOT/usr/share/sphinxpi"
 
 install -m 0755 "$ROOT/src/sphinx" "$PKGROOT/usr/bin/sphinx"
-for helper in desktop-install.sh desktop-layout.sh archive-install.sh archive-manager.sh; do
+for helper in desktop-install.sh desktop-layout.sh archive-install.sh archive-manager.sh update.sh; do
     install -m 0755 "$ROOT/scripts/$helper" "$PKGROOT/usr/lib/sphinxpi/$helper"
 done
 install -m 0644 "$ROOT/VERSION" "$PKGROOT/usr/share/sphinxpi/version"
