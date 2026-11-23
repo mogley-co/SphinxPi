@@ -19,10 +19,11 @@ if [ "${VERSION_CODENAME:-}" != "trixie" ]; then
 fi
 
 ARCH=$(dpkg --print-architecture)
-case "$ARCH" in
-    armel|armhf) ;;
-    *) echo "Unsupported Debian architecture: $ARCH"; exit 1 ;;
-esac
+if [ "$ARCH" != "armel" ] || [ "$(uname -m)" != "armv6l" ]; then
+    echo "The SphinxPi desktop profile targets the original Pi Zero (ARMv6 / armel)."
+    echo "Detected: $(uname -m) / $ARCH"
+    exit 1
+fi
 
 FREE_KB=$(df -Pk / | awk 'NR==2 {print $4}')
 if [ -z "$FREE_KB" ] || [ "$FREE_KB" -lt 1200000 ]; then
