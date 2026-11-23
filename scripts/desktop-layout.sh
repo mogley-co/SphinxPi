@@ -61,8 +61,7 @@ in_global && /^[[:space:]]*height=/ {
 }
 { print }
 END {
-    if (in_global) add_missing()
-    if (!done_global) exit 2
+    if (in_global || !done_global) exit 2
 }
 ' "$PANEL_FILE" > "$TMP"; then
     rm -f "$TMP"
@@ -70,8 +69,8 @@ END {
     exit 1
 fi
 
-cat "$TMP" > "$PANEL_FILE"
-rm -f "$TMP"
+chmod --reference="$PANEL_FILE" "$TMP"
+mv -f "$TMP" "$PANEL_FILE"
 
 if command -v lxpanelctl >/dev/null 2>&1; then
     lxpanelctl restart || true
