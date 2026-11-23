@@ -21,11 +21,11 @@ Usage:
   sphinx desktop-layout   Move LXPanel to the top
   sphinx archive-install  Install optional archive tools (root required)
   sphinx archive          Open Archive Manager
-  sphinx dev               Open Development Manager
-  sphinx python            Open Python Manager
-  sphinx node              Open Node.js Manager
-  sphinx tools              Open Developer Tools Manager
-  sphinx doctor             Run system diagnostics
+  sphinx dev              Open Development Manager
+  sphinx python           Open Python Manager
+  sphinx node             Open Node.js Manager
+  sphinx tools            Open Developer Tools Manager
+  sphinx doctor           Run system diagnostics
   sphinx uninstall        Remove SphinxPi (add -f for full system removal)
   sphinx ui               Open the SphinxPi management menu
 
