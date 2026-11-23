@@ -25,7 +25,7 @@ cd SphinxPi
 sudo sh scripts/install.sh
 ```
 
-## Install and start the optional desktop
+## Optional desktop
 
 ```sh
 sudo sphinx desktop-install
@@ -33,7 +33,7 @@ sudo sphinx desktop-install
 
 This installs Xorg, Xinit, LXDE core and lightweight desktop utilities. It does not enable a display manager, automatic graphical login, change the default boot target, replace the kernel, or alter partitions.
 
-After installation, start LXDE from a normal non-root account:
+Start LXDE from a normal non-root account:
 
 ```sh
 sphinx desktop
@@ -45,18 +45,49 @@ Inside the graphical session, move the LXPanel to the top:
 sphinx desktop-layout
 ```
 
-## Current commands
+## Archive Manager
+
+Install the optional archive tools:
+
+```sh
+sudo sphinx archive-install
+```
+
+Open the interactive terminal menu:
+
+```sh
+sphinx archive
+```
+
+The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.XZ and TAR.BZ2 creation; extraction; content listing; and archive testing. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback.
+
+**Password note:** AES-256 is used for password-protected ZIP and 7Z archives through 7-Zip. Passwords are requested interactively rather than placed directly in the command line. TAR-based formats do not support built-in password encryption. Keep your password safe; encrypted archives cannot be recovered if it is lost.
+
+## Network diagnostics
+
+Run:
+
+```sh
+sphinx network-check
+```
+
+This checks the system clock, default route, DNS resolution for Debian, HTTPS connectivity over IPv4, and configured APT source entries. It is read-only and does not change Wi-Fi, DNS, IPv4/IPv6, or repository settings.
+
+## Commands
 
 - `sphinx help`
 - `sphinx info`
 - `sphinx version`
+- `sphinx network-check`
 - `sudo sphinx desktop-install`
 - `sphinx desktop`
 - `sphinx desktop-layout`
+- `sudo sphinx archive-install`
+- `sphinx archive`
 
 ## Safety
 
 - Back up the SD card before system-level changes.
 - Do not flash or repartition the card during normal SphinxPi upgrades.
-- Desktop installation is optional and requires explicit confirmation.
+- Desktop and archive tool installation are optional and require explicit confirmation.
 - The existing text login remains available as a recovery path.
