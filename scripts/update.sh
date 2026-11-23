@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+sh "$SCRIPT_DIR/platform-check.sh"
+
 if [ "$(id -u)" -ne 0 ]; then
     echo "Run this command as root. Use: sudo sphinx update" >&2
     exit 1
