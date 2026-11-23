@@ -8,12 +8,20 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-for cmd in tar gzip xz bzip2; do
+for cmd in tar gzip xz bzip2 du basename mkdir; do
     command -v "$cmd" >/dev/null 2>&1 || {
-        echo "Missing $cmd. Run: sudo sphinx archive-install"
+        echo "Missing required command: $cmd"
         exit 1
     }
 done
+
+expand_path() {
+    case "$1" in
+        "~") printf '%s\n' "$HOME" ;;
+        "~/"*) printf '%s/%s\n' "$HOME" "${1#~/}" ;;
+        *) printf '%s\n' "$1" ;;
+    esac
+}
 
 ask() {
     prompt=$1
@@ -24,7 +32,7 @@ ask() {
         printf "%s" "$prompt" >&2
         [ -z "$default" ] || printf " [%s]" "$default" >&2
         printf ": " >&2
-        IFS= read -r answer
+        IFS= read -r answer || return 1
         printf "%s" "${answer:-$default}"
     fi
 }
@@ -35,7 +43,7 @@ yesno() {
         whiptail --title "$APP" --yesno "$prompt" 10 65
     else
         printf "%s [y/N] " "$prompt" >&2
-        IFS= read -r answer
+        IFS= read -r answer || return 1
         case "$answer" in y|Y|yes|YES) return 0 ;; *) return 1 ;; esac
     fi
 }
@@ -49,15 +57,15 @@ menu() {
             test "Test archive integrity" \
             quit "Exit" 3>&1 1>&2 2>&3
     else
-        echo >&2
-        echo "=== $APP ===" >&2
-        echo "1) Create archive" >&2
-        echo "2) Extract archive" >&2
-        echo "3) List contents" >&2
-        echo "4) Test archive" >&2
-        echo "5) Exit" >&2
-        printf "Choose: " >&2
-        IFS= read -r choice
+        echo
+        echo "=== $APP ==="
+        echo "1) Create archive"
+        echo "2) Extract archive"
+        echo "3) List contents"
+        echo "4) Test archive"
+        echo "5) Exit"
+        printf "Choose: "
+        IFS= read -r choice || return 1
         case "$choice" in
             1) echo create ;;
             2) echo extract ;;
@@ -74,7 +82,7 @@ message() {
     else
         printf "\n%s\n" "$1"
         printf "Press Enter to continue..."
-        IFS= read -r _
+        IFS= read -r _ || true
     fi
 }
 
@@ -89,9 +97,9 @@ choose_format() {
             tarxz "TAR.XZ (often smaller, slower)" \
             tarbz2 "TAR.BZ2" 3>&1 1>&2 2>&3
     else
-        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2" >&2
-        printf "Format: " >&2
-        IFS= read -r f
+        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2"
+        printf "Format: "
+        IFS= read -r f || return 1
         case "$f" in
             1) echo zip ;; 2) echo zipaes ;; 3) echo seven ;; 4) echo tar ;;
             5) echo targz ;; 6) echo tarxz ;; 7) echo tarbz2 ;;
@@ -100,114 +108,152 @@ choose_format() {
     fi
 }
 
-create_archive() {
-    source=$(ask "Full path to the file or folder to compress")
-    [ -n "$source" ] || return
-    if [ ! -e "$source" ]; then message "Source not found: $source"; return; fi
+pause_output() {
+    printf "\nPress Enter to return to the menu..."
+    IFS= read -r _ || true
+}
 
-    format=$(choose_format) || return
-    [ -n "$format" ] || return
+create_archive() {
+    source=$(ask "Path to the file or folder to compress") || return 0
+    source=$(expand_path "$source")
+    [ -n "$source" ] || return 0
+    if [ ! -e "$source" ]; then message "Source not found: $source"; return 0; fi
+
+    format=$(choose_format) || return 0
+    [ -n "$format" ] || return 0
     case "$format" in
-        zip) ext=".zip" ;;
-        zipaes) ext=".zip" ;;
+        zip|zipaes) ext=".zip" ;;
         seven) ext=".7z" ;;
         tar) ext=".tar" ;;
         targz) ext=".tar.gz" ;;
         tarxz) ext=".tar.xz" ;;
         tarbz2) ext=".tar.bz2" ;;
+        *) message "Unknown format."; return 0 ;;
     esac
+
     base=$(basename "$source")
-    output=$(ask "Output archive path" "$PWD/$base$ext")
-    [ -n "$output" ] || return
+    output=$(ask "Output archive path" "$PWD/$base$ext") || return 0
+    output=$(expand_path "$output")
+    [ -n "$output" ] || return 0
+    if [ -d "$output" ]; then message "Output path is a directory."; return 0; fi
     if [ -e "$output" ]; then
-        yesno "The output already exists. Overwrite it?" || return
+        yesno "The output already exists. Replace it?" || return 0
         rm -f -- "$output"
     fi
 
-    level=$(ask "Compression level (0 = fastest/store, 9 = smallest; TAR uses format defaults)" "6")
-    case "$level" in 0|1|2|3|4|5|6|7|8|9) ;; *) message "Invalid compression level."; return ;; esac
+    level=$(ask "Compression level (0 = fastest, 9 = strongest; TAR ignores this)" "4") || return 0
+    case "$level" in 0|1|2|3|4|5|6|7|8|9) ;; *) message "Invalid compression level."; return 0 ;; esac
 
     case "$format" in
         zip)
-            command -v zip >/dev/null 2>&1 || { message "Install ZIP support: sudo sphinx archive-install"; return; }
-            zip "-$level" -r "$output" "$source"
+            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sudo sphinx archive-install"; return 0; fi
+            if zip "-$level" -r "$output" "$source"; then :; else rm -f -- "$output"; message "ZIP creation failed."; return 0; fi
             ;;
         zipaes)
-            command -v 7zz >/dev/null 2>&1 || { message "Install 7-Zip support: sudo sphinx archive-install"; return; }
-            message "7-Zip will securely prompt for an AES-256 password in the terminal."
-            7zz a -tzip -mem=AES256 "-mx=$level" -p "$output" "$source"
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install"; return 0; fi
+            message "7-Zip will ask for the AES-256 password in the terminal. The password is not saved in shell history."
+            if 7z a -tzip -mem=AES256 "-mx=$level" -p "$output" "$source"; then :; else rm -f -- "$output"; message "Encrypted ZIP creation failed."; return 0; fi
             ;;
         seven)
-            command -v 7zz >/dev/null 2>&1 || { message "Install 7-Zip support: sudo sphinx archive-install"; return; }
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install"; return 0; fi
             if yesno "Protect this 7Z archive with an AES-256 password?"; then
-                7zz a -t7z -mhe=on "-mx=$level" -p "$output" "$source"
+                if 7z a -t7z -mhe=on "-mx=$level" -p "$output" "$source"; then :; else rm -f -- "$output"; message "7Z creation failed."; return 0; fi
             else
-                7zz a -t7z "-mx=$level" "$output" "$source"
+                if 7z a -t7z "-mx=$level" "$output" "$source"; then :; else rm -f -- "$output"; message "7Z creation failed."; return 0; fi
             fi
             ;;
-        tar) tar -cf "$output" "$source" ;;
-        targz) tar -I "gzip -$level" -cf "$output" "$source" ;;
-        tarxz) tar -I "xz -$level" -cf "$output" "$source" ;;
-        tarbz2) tar -I "bzip2 -$level" -cf "$output" "$source" ;;
+        tar)
+            if tar -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR creation failed."; return 0; fi
+            ;;
+        targz)
+            if tar -I "gzip -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.GZ creation failed."; return 0; fi
+            ;;
+        tarxz)
+            if tar -I "xz -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.XZ creation failed."; return 0; fi
+            ;;
+        tarbz2)
+            if tar -I "bzip2 -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.BZ2 creation failed."; return 0; fi
+            ;;
     esac
 
     if [ -f "$output" ]; then
         size=$(du -h "$output" | awk '{print $1}')
-        message "Archive created successfully.\n\nFile: $output\nSize: $size"
+        message "Archive created.\n\nFile: $output\nSize: $size"
     else
-        message "The archive command did not produce an output file. Check the error above."
+        message "No output archive was created. Check the error output."
     fi
 }
 
 get_archive() {
-    ask "Full path to the archive"
+    archive=$(ask "Path to the archive") || return 1
+    expand_path "$archive"
 }
 
 extract_archive() {
-    archive=$(get_archive)
-    [ -n "$archive" ] || return
-    [ -f "$archive" ] || { message "Archive not found."; return; }
-    dest=$(ask "Extract into this directory" "$PWD")
-    [ -n "$dest" ] || return
-    mkdir -p "$dest"
+    archive=$(get_archive) || return 0
+    [ -n "$archive" ] || return 0
+    [ -f "$archive" ] || { message "Archive not found."; return 0; }
+    dest=$(ask "Extract into this directory (use a new empty folder)" "$PWD") || return 0
+    dest=$(expand_path "$dest")
+    [ -n "$dest" ] || return 0
+    mkdir -p -- "$dest"
+    if [ -n "$(find "$dest" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]; then
+        message "For safety, extraction is allowed only into an empty directory. Create a new folder and try again."
+        return 0
+    fi
+
     case "$archive" in
-        *.zip)
-            if command -v 7zz >/dev/null 2>&1; then (cd "$dest" && 7zz x "$archive"); else (cd "$dest" && unzip "$archive"); fi ;;
-        *.7z) 7zz x "-o$dest" "$archive" ;;
-        *.tar|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2) tar -xf "$archive" -C "$dest" ;;
-        *) message "Unknown extension. Supported: zip, 7z, tar, tar.gz, tar.xz, tar.bz2."; return ;;
+        *.zip|*.7z)
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if 7z x "-o$dest" "$archive"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Check the archive and password."; fi
+            ;;
+        *.tar|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2)
+            if tar -xf "$archive" -C "$dest"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Do not use files from an untrusted archive."; fi
+            ;;
+        *) message "Unknown extension. Supported: zip, 7z, tar, tar.gz, tar.xz, tar.bz2."; return 0 ;;
     esac
-    message "Extraction finished.\nDestination: $dest"
 }
 
 list_archive() {
-    archive=$(get_archive)
-    [ -n "$archive" ] || return
-    [ -f "$archive" ] || { message "Archive not found."; return; }
+    archive=$(get_archive) || return 0
+    [ -n "$archive" ] || return 0
+    [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
-        *.zip) unzip -l "$archive" ;;
-        *.7z) 7zz l "$archive" ;;
-        *.tar|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2) tar -tf "$archive" ;;
-        *) message "Unsupported archive extension."; return ;;
+        *.zip|*.7z)
+            if command -v 7z >/dev/null 2>&1; then 7z l "$archive"; else message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            ;;
+        *.tar) tar -tf "$archive" ;;
+        *.tar.gz|*.tgz) tar -tzf "$archive" ;;
+        *.tar.xz|*.txz) tar -tJf "$archive" ;;
+        *.tar.bz2|*.tbz2) tar -tjf "$archive" ;;
+        *) message "Unsupported archive extension."; return 0 ;;
     esac
-    printf "\nPress Enter to return to the menu..."
-    IFS= read -r _
+    pause_output
 }
 
 test_archive() {
-    archive=$(get_archive)
-    [ -n "$archive" ] || return
-    [ -f "$archive" ] || { message "Archive not found."; return; }
+    archive=$(get_archive) || return 0
+    [ -n "$archive" ] || return 0
+    [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
-        *.zip) unzip -t "$archive" ;;
-        *.7z) 7zz t "$archive" ;;
-        *.tar.gz|*.tgz) gzip -t "$archive" && tar -tzf "$archive" >/dev/null ;;
-        *.tar.xz|*.txz) xz -t "$archive" && tar -tJf "$archive" >/dev/null ;;
-        *.tar.bz2|*.tbz2) bzip2 -t "$archive" && tar -tjf "$archive" >/dev/null ;;
-        *.tar) tar -tf "$archive" >/dev/null ;;
-        *) message "Unsupported archive extension."; return ;;
+        *.zip|*.7z)
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if 7z t "$archive"; then message "Archive integrity test passed."; else message "Archive test FAILED. The file may be damaged or the password may be incorrect."; fi
+            ;;
+        *.tar.gz|*.tgz)
+            if gzip -t "$archive" && tar -tzf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
+            ;;
+        *.tar.xz|*.txz)
+            if xz -t "$archive" && tar -tJf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
+            ;;
+        *.tar.bz2|*.tbz2)
+            if bzip2 -t "$archive" && tar -tjf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
+            ;;
+        *.tar)
+            if tar -tf "$archive" >/dev/null; then message "TAR listing completed; TAR has no built-in checksum."; else message "TAR read failed."; fi
+            ;;
+        *) message "Unsupported archive extension."; return 0 ;;
     esac
-    message "Archive check completed. Review the command output for errors."
 }
 
 while :; do
