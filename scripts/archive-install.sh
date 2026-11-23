@@ -2,7 +2,7 @@
 set -eu
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "Run with sudo: sudo sphinx archive-install"
+    echo "Run this command as root. On DietPi, log in as root and run: sphinx archive-install"
     exit 1
 fi
 
