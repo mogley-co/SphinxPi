@@ -14,12 +14,12 @@ Usage:
   sphinx version          Show SphinxPi version
   sphinx info             Show system and hardware information
   sphinx network-check    Diagnose network, DNS and Debian HTTPS access
-  sphinx desktop-install (as root) or sudo sphinx desktop-install (as a normal user)
-                          Install the lightweight LXDE desktop
+  sphinx desktop-install Install the lightweight LXDE desktop (run as root;
+                          use sudo from a normal user account)
   sphinx desktop          Start LXDE from a normal user account
   sphinx desktop-layout   Move the LXPanel to the top
-  sphinx archive-install (as root) or sudo sphinx archive-install (as a normal user)
-                          Install archive tools and the terminal menu
+  sphinx archive-install Install archive tools and the terminal menu (run as
+                          root; use sudo from a normal user account)
   sphinx archive          Open the interactive Archive Manager
   sphinx uninstall        Remove SphinxPi command, helpers and configuration
 
