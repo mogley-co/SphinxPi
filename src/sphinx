@@ -1,149 +1,116 @@
 #!/bin/sh
 set -eu
 
-VERSION_FILE="/etc/sphinxpi/version"
-VERSION="0.1.0"
+VERSION_FILE="/usr/share/sphinxpi/version"
+VERSION="unknown"
 [ ! -r "$VERSION_FILE" ] || VERSION=$(cat "$VERSION_FILE")
+LIB_DIR="/usr/lib/sphinxpi"
 
 show_help() {
     cat <<'EOF'
-SphinxPi - Raspberry Pi system layer
+SphinxPi - Raspberry Pi system tools
 
 Usage:
   sphinx help             Show this help
-  sphinx version          Show SphinxPi version
-  sphinx info             Show system and hardware information
-  sphinx network-check    Diagnose network, DNS and Debian HTTPS access
-  sphinx desktop-install Install the lightweight LXDE desktop (run as root;
-                          use sudo from a normal user account)
-  sphinx desktop          Start LXDE from a normal user account
-  sphinx desktop-layout   Move the LXPanel to the top
-  sphinx archive-install Install archive tools and the terminal menu (run as
-                          root; use sudo from a normal user account)
-  sphinx archive          Open the interactive Archive Manager
-  sphinx uninstall        Remove SphinxPi command, helpers and configuration
+  sphinx version          Show installed version
+  sphinx info             Show system information
+  sphinx network-check    Diagnose network and APT connectivity
+  sphinx desktop-install  Install optional LXDE desktop (root required)
+  sphinx desktop          Start LXDE (normal user session)
+  sphinx desktop-layout   Move LXPanel to the top
+  sphinx archive-install  Install optional archive tools (root required)
+  sphinx archive          Open Archive Manager
+  sphinx uninstall        Remove SphinxPi using Debian's package manager
 
-The uninstall command requires root. It leaves optional desktop/archive packages
-and personal files installed. The text login remains available.
+Normal Debian package commands:
+  sudo apt install ./sphinxpi_VERSION_all.deb
+  sudo apt remove sphinxpi
+  sudo apt purge sphinxpi
+
+Use sudo for administrative commands when logged in as a normal user.
 EOF
 }
 
-show_info() {
-    echo "SphinxPi $VERSION"
-    echo "----------------"
-    if [ -r /etc/os-release ]; then
-        . /etc/os-release
-        echo "OS: ${PRETTY_NAME:-unknown}"
-    else
-        echo "OS: unknown"
+run_helper() {
+    helper=$1
+    shift
+    path="$LIB_DIR/$helper"
+    if [ ! -x "$path" ]; then
+        echo "SphinxPi helper is missing: $path" >&2
+        echo "Repair the package with: sudo apt install --reinstall sphinxpi" >&2
+        exit 1
     fi
-    echo "Kernel: $(uname -r)"
-    echo "Architecture: $(uname -m)"
-    echo "Debian architecture: $(dpkg --print-architecture 2>/dev/null || echo unknown)"
-    echo "Hostname: $(hostname)"
-    if [ -r /proc/device-tree/model ]; then
-        MODEL=$(tr -d '\000' </proc/device-tree/model)
-        echo "Hardware: $MODEL"
-    else
-        echo "Hardware: unavailable"
-    fi
-    if [ -r /proc/meminfo ]; then
-        awk '/MemTotal|MemAvailable/ {print $1, int($2/1024) " MB"}' /proc/meminfo
-    fi
-    echo "Root filesystem:"
-    df -h /
-}
-
-network_check() {
-    echo "SphinxPi network diagnostics (read-only)"
-    echo "========================================"
-    echo
-    echo "[Clock]"
-    date
-    echo
-    echo "[Default route]"
-    if command -v ip >/dev/null 2>&1; then
-        ip route show default || true
-    else
-        echo "ip command unavailable"
-    fi
-    echo
-    echo "[DNS: deb.debian.org]"
-    if command -v getent >/dev/null 2>&1; then
-        getent ahosts deb.debian.org || echo "DNS lookup failed"
-    else
-        echo "getent unavailable"
-    fi
-    echo
-    echo "[HTTPS over IPv4]"
-    if command -v curl >/dev/null 2>&1; then
-        curl -4 -I --connect-timeout 8 --max-time 12 https://deb.debian.org/debian/ || echo "IPv4 HTTPS test failed"
-    else
-        echo "curl unavailable; install it with: sudo apt install curl"
-    fi
-    echo
-    echo "[APT source entries]"
-    if [ -r /etc/apt/sources.list ]; then
-        grep -Ev '^[[:space:]]*(#|$)' /etc/apt/sources.list || true
-    fi
-    if [ -d /etc/apt/sources.list.d ]; then
-        grep -RhsEv '^[[:space:]]*(#|$)' /etc/apt/sources.list.d --include='*.list' --include='*.sources' 2>/dev/null || true
-    fi
-    echo
-    echo "No network or repository settings were changed."
+    exec "$path" "$@"
 }
 
 case "${1:-help}" in
     help|-h|--help) show_help ;;
     version|-v|--version) echo "SphinxPi $VERSION" ;;
-    info) show_info ;;
-    network-check) network_check ;;
-    archive-install)
-        [ -x /usr/lib/sphinxpi/archive-install.sh ] || { echo "Archive installer missing. Reinstall SphinxPi CLI."; exit 1; }
-        exec /usr/lib/sphinxpi/archive-install.sh
-        ;;
-    uninstall)
-        [ -x /usr/lib/sphinxpi/uninstall.sh ] || {
-            echo "Installed uninstaller not found."
-            echo "From the SphinxPi repository, run: sh scripts/uninstall.sh"
-            exit 1
-        }
-        exec /usr/lib/sphinxpi/uninstall.sh
-        ;;
-    archive)
-        if [ "$(id -u)" -eq 0 ]; then
-            echo "Run the Archive Manager as your normal user, not root."
-            exit 1
+    info)
+        echo "SphinxPi $VERSION"
+        echo "OS: $(. /etc/os-release 2>/dev/null; printf '%s' "${PRETTY_NAME:-unknown}")"
+        echo "Kernel: $(uname -r)"
+        echo "Machine: $(uname -m)"
+        echo "Debian architecture: $(dpkg --print-architecture 2>/dev/null || echo unknown)"
+        echo "Hostname: $(hostname)"
+        if [ -r /proc/device-tree/model ]; then
+            printf "Hardware: "
+            tr -d '\000' </proc/device-tree/model
+            printf '\n'
         fi
-        [ -x /usr/lib/sphinxpi/archive-manager.sh ] || { echo "Archive Manager missing. Run sphinx archive-install as root, or sudo sphinx archive-install as a normal user."; exit 1; }
-        exec /usr/lib/sphinxpi/archive-manager.sh
+        awk '/MemTotal|MemAvailable/ {print $1, int($2/1024) " MB"}' /proc/meminfo 2>/dev/null || true
+        df -h /
         ;;
-    desktop-install)
-        [ -x /usr/lib/sphinxpi/desktop-install.sh ] || { echo "Desktop installer missing. Reinstall SphinxPi CLI."; exit 1; }
-        exec /usr/lib/sphinxpi/desktop-install.sh
+    network-check)
+        echo "[Clock]"
+        date
+        echo
+        echo "[Default route]"
+        if command -v ip >/dev/null 2>&1; then ip route show default || true; else echo "ip command unavailable"; fi
+        echo
+        echo "[DNS: deb.debian.org]"
+        if command -v getent >/dev/null 2>&1; then getent ahosts deb.debian.org || echo "DNS lookup failed"; else echo "getent unavailable"; fi
+        echo
+        echo "[HTTPS]"
+        if command -v curl >/dev/null 2>&1; then curl -4 -I --connect-timeout 8 --max-time 12 https://deb.debian.org/debian/ || echo "HTTPS test failed"; else echo "curl missing; install with: sudo apt install curl"; fi
+        echo
+        echo "[APT sources]"
+        if [ -r /etc/apt/sources.list ]; then grep -Ev '^[[:space:]]*(#|$)' /etc/apt/sources.list || true; fi
+        if [ -d /etc/apt/sources.list.d ]; then grep -RhsEv '^[[:space:]]*(#|$)' /etc/apt/sources.list.d --include='*.list' --include='*.sources' 2>/dev/null || true; fi
         ;;
+    desktop-install) run_helper desktop-install.sh ;;
     desktop)
         if [ "$(id -u)" -eq 0 ]; then
-            echo "Do not start a graphical desktop as root."
-            echo "Create/log in to a normal user account, then run: sphinx desktop"
+            echo "Do not start LXDE as root. Log in as a normal user and run: sphinx desktop"
             exit 1
         fi
         if ! command -v startx >/dev/null 2>&1 || [ ! -x /usr/bin/startlxde ]; then
-            echo "LXDE is not installed. Run sphinx desktop-install as root, or sudo sphinx desktop-install as a normal user."
+            echo "LXDE is not installed. Run 'sudo sphinx desktop-install' first."
             exit 1
         fi
         exec startx /usr/bin/startlxde
         ;;
     desktop-layout)
+        if [ "$(id -u)" -eq 0 ]; then echo "Run this inside your normal user's LXDE session."; exit 1; fi
+        run_helper desktop-layout.sh
+        ;;
+    archive-install) run_helper archive-install.sh ;;
+    archive)
+        if [ "$(id -u)" -eq 0 ]; then echo "Run Archive Manager as a normal user, not root."; exit 1; fi
+        run_helper archive-manager.sh
+        ;;
+    uninstall)
         if [ "$(id -u)" -eq 0 ]; then
-            echo "Run this command from your normal user's LXDE session, not as root."
+            exec apt-get remove sphinxpi
+        elif command -v sudo >/dev/null 2>&1; then
+            exec sudo apt-get remove sphinxpi
+        else
+            echo "Use the Debian package manager as root: apt-get remove sphinxpi" >&2
             exit 1
         fi
-        [ -x /usr/lib/sphinxpi/desktop-layout.sh ] || { echo "Desktop layout helper missing. Reinstall SphinxPi CLI."; exit 1; }
-        exec /usr/lib/sphinxpi/desktop-layout.sh
         ;;
     *)
-        echo "Unknown or not-yet-implemented command: $1" >&2
+        echo "Unknown command: $1" >&2
         echo "Run 'sphinx help'." >&2
         exit 2
         ;;
