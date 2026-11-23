@@ -450,7 +450,7 @@ case "$MODE" in
     doctor) doctor ;;
     menu)
         while :; do
-            choice=$(whiptail --title "SphinxPi Development Manager" --menu "Lightweight development tools for Raspberry Pi Zero." 18 72 6 \
+            choice=$(whiptail --title "SphinxPi Development Manager" --menu "Development tools for Debian-based systems." 18 72 6 \
                 python "Python Manager" \
                 node "Node.js Manager" \
                 tools "Developer Tools" \
