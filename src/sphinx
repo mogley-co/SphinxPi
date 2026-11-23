@@ -13,6 +13,7 @@ SphinxPi - Raspberry Pi system tools
 Usage:
   sphinx help             Show this help
   sphinx version          Show installed version
+  sphinx update           Download and install the latest GitHub version
   sphinx info             Show system information
   sphinx network-check    Diagnose network and APT connectivity
   sphinx desktop-install  Install optional LXDE desktop (root required)
@@ -77,6 +78,16 @@ case "${1:-help}" in
         echo "[APT sources]"
         if [ -r /etc/apt/sources.list ]; then grep -Ev '^[[:space:]]*(#|$)' /etc/apt/sources.list || true; fi
         if [ -d /etc/apt/sources.list.d ]; then grep -RhsEv '^[[:space:]]*(#|$)' /etc/apt/sources.list.d --include='*.list' --include='*.sources' 2>/dev/null || true; fi
+        ;;
+    update)
+        if [ "$(id -u)" -eq 0 ]; then
+            run_helper update.sh
+        elif command -v sudo >/dev/null 2>&1; then
+            exec sudo "$LIB_DIR/update.sh"
+        else
+            echo "Run this command as root: sudo sphinx update" >&2
+            exit 1
+        fi
         ;;
     desktop-install) run_helper desktop-install.sh ;;
     desktop)
