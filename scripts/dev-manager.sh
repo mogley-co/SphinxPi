@@ -406,13 +406,18 @@ doctor() {
         else
             echo "Installed version: not found"
         fi
-        for helper in dev-manager.sh archive-manager.sh update.sh track-install.sh remove.sh; do
+        for helper in dev-manager.sh system-manager.sh archive-manager.sh update.sh track-install.sh remove.sh; do
             if [ -r "/usr/lib/sphinxpi/$helper" ]; then
                 echo "$helper: readable"
             else
                 echo "$helper: MISSING"
             fi
         done
+        if [ -r /usr/share/sphinxpi/apps.tsv ]; then
+            echo "App catalogue: $(awk '!/^#/ && NF {n++} END {print n+0}' /usr/share/sphinxpi/apps.tsv) entries"
+        else
+            echo "App catalogue: MISSING"
+        fi
         if command -v sphinx >/dev/null 2>&1; then
             echo "sphinx command: $(command -v sphinx)"
         else
