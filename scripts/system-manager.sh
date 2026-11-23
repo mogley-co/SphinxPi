@@ -231,7 +231,7 @@ apps_manager() {
             set -- "$@" "$package" "$label" "$state"
         done < "$tmp"
         rm -f "$tmp"
-        selected=$(whiptail --title "Install Apps — select packages" --checklist "Installed packages are marked ON. Select one or more packages with SPACE, then press ENTER. Unavailable packages are checked against APT before installation." 24 88 15 "$@" 3>&1 1>&2 2>&3) || continue
+        selected=$(whiptail --title "Install Apps — select packages" --checklist "Installed packages are marked ON. Select one or more packages with SPACE, then press ENTER. Unavailable packages are checked against APT before installation." 22 76 12 "$@" 3>&1 1>&2 2>&3) || continue
         [ -n "$selected" ] || continue
         selected=$(printf '%s' "$selected" | tr -d '"')
         # Whiptail returns only package IDs from the fixed, trusted catalogue.
