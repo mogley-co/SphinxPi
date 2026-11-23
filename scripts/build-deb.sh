@@ -23,6 +23,22 @@ for helper in desktop-install.sh desktop-layout.sh archive-install.sh archive-ma
 done
 install -m 0644 "$ROOT/VERSION" "$PKGROOT/usr/share/sphinxpi/version"
 
+cat > "$PKGROOT/DEBIAN/preinst" <<'EOF'
+#!/bin/sh
+set -e
+case "${1:-}" in
+    install|upgrade)
+        # Remove the legacy command so /usr/local/bin cannot shadow the
+        # Debian-managed /usr/bin/sphinx command.
+        rm -f /usr/local/bin/sphinx
+        rm -f /usr/lib/sphinxpi/uninstall.sh
+        rm -rf /etc/sphinxpi
+        ;;
+esac
+exit 0
+EOF
+chmod 0755 "$PKGROOT/DEBIAN/preinst"
+
 cat > "$PKGROOT/DEBIAN/control" <<EOF
 Package: sphinxpi
 Version: $VERSION
