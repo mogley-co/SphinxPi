@@ -47,11 +47,12 @@ if [ ! -f "$PACKAGE" ]; then
     exit 1
 fi
 
+# Refresh package indexes before changing the installed package or its tools.
+apt-get update
 apt-get install -y "$PACKAGE"
 
 echo
 echo "Installing SphinxPi Archive Manager dependencies..."
-apt-get update
 ARCHIVE_PACKAGES="whiptail zip unzip 7zip tar gzip bzip2 zstd lz4"
 RAR_CANDIDATE=$(apt-cache policy 7zip-rar 2>/dev/null | awk '$1 == "Candidate:" {print $2}')
 if [ -n "$RAR_CANDIDATE" ] && [ "$RAR_CANDIDATE" != "(none)" ]; then
