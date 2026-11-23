@@ -151,6 +151,11 @@ create_archive() {
 
     level=$(ask "Compression level (0 = fastest, 9 = strongest; TAR ignores this)" "4") || return 0
     case "$level" in 0|1|2|3|4|5|6|7|8|9) ;; *) message "Invalid compression level."; return 0 ;; esac
+    case "$format:$level" in
+        seven:7|seven:8|seven:9|tarxz:7|tarxz:8|tarxz:9)
+            yesno "This compression level can use a lot of memory and may make a 512 MB Pi Zero unresponsive. Continue?" || return 0
+            ;;
+    esac
 
     case "$format" in
         zip)
