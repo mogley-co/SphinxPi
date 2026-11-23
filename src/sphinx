@@ -21,8 +21,10 @@ Usage:
   sphinx archive-install (as root) or sudo sphinx archive-install (as a normal user)
                           Install archive tools and the terminal menu
   sphinx archive          Open the interactive Archive Manager
+  sphinx uninstall        Remove SphinxPi command, helpers and configuration
 
-The desktop and archive tools are optional. The text login remains available.
+The uninstall command requires root. It leaves optional desktop/archive packages
+and personal files installed. The text login remains available.
 EOF
 }
 
@@ -99,6 +101,14 @@ case "${1:-help}" in
     archive-install)
         [ -x /usr/lib/sphinxpi/archive-install.sh ] || { echo "Archive installer missing. Reinstall SphinxPi CLI."; exit 1; }
         exec /usr/lib/sphinxpi/archive-install.sh
+        ;;
+    uninstall)
+        [ -x /usr/lib/sphinxpi/uninstall.sh ] || {
+            echo "Installed uninstaller not found."
+            echo "From the SphinxPi repository, run: sh scripts/uninstall.sh"
+            exit 1
+        }
+        exec /usr/lib/sphinxpi/uninstall.sh
         ;;
     archive)
         if [ "$(id -u)" -eq 0 ]; then
