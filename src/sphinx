@@ -14,11 +14,11 @@ Usage:
   sphinx version          Show SphinxPi version
   sphinx info             Show system and hardware information
   sphinx network-check    Diagnose network, DNS and Debian HTTPS access
-  sudo sphinx desktop-install
+  sphinx desktop-install (as root) or sudo sphinx desktop-install (as a normal user)
                           Install the lightweight LXDE desktop
   sphinx desktop          Start LXDE from a normal user account
   sphinx desktop-layout   Move the LXPanel to the top
-  sudo sphinx archive-install
+  sphinx archive-install (as root) or sudo sphinx archive-install (as a normal user)
                           Install archive tools and the terminal menu
   sphinx archive          Open the interactive Archive Manager
 
@@ -105,7 +105,7 @@ case "${1:-help}" in
             echo "Run the Archive Manager as your normal user, not root."
             exit 1
         fi
-        [ -x /usr/lib/sphinxpi/archive-manager.sh ] || { echo "Archive Manager missing. Run: sudo sphinx archive-install"; exit 1; }
+        [ -x /usr/lib/sphinxpi/archive-manager.sh ] || { echo "Archive Manager missing. Run sphinx archive-install as root, or sudo sphinx archive-install as a normal user."; exit 1; }
         exec /usr/lib/sphinxpi/archive-manager.sh
         ;;
     desktop-install)
@@ -119,7 +119,7 @@ case "${1:-help}" in
             exit 1
         fi
         if ! command -v startx >/dev/null 2>&1 || [ ! -x /usr/bin/startlxde ]; then
-            echo "LXDE is not installed. Run: sudo sphinx desktop-install"
+            echo "LXDE is not installed. Run sphinx desktop-install as root, or sudo sphinx desktop-install as a normal user."
             exit 1
         fi
         exec startx /usr/bin/startlxde
