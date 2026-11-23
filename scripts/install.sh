@@ -6,7 +6,10 @@ ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE="$ROOT_DIR/src/sphinx"
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "Please run this installer with sudo:"
+    echo "This installer needs root privileges."
+    echo "On DietPi, if you are logged in as root, run:"
+    echo "  sh scripts/install.sh"
+    echo "From a normal user account, run:"
     echo "  sudo sh scripts/install.sh"
     exit 1
 fi
@@ -38,7 +41,6 @@ DEST="/usr/local/bin/sphinx"
 LIB_DIR="/usr/lib/sphinxpi"
 CONFIG_DIR="/etc/sphinxpi"
 
-# Install helper programs first so the new CLI never points to missing helpers.
 install -d -m 0755 "$LIB_DIR"
 install -m 0755 "$SCRIPT_DIR/desktop-install.sh" "$LIB_DIR/desktop-install.sh"
 install -m 0755 "$SCRIPT_DIR/desktop-layout.sh" "$LIB_DIR/desktop-layout.sh"
@@ -58,6 +60,6 @@ fi
 
 install -D -m 0755 "$SOURCE" "$DEST"
 
-echo "SphinxPi CLI installed."
-echo "No packages, boot files, kernel, firmware, or partitions were changed."
+echo "SphinxPi CLI and helper scripts installed."
 echo "Try: sphinx help"
+echo "No packages, boot files, kernel, firmware, network settings or partitions were changed."
