@@ -277,13 +277,157 @@ tools_menu() {
 }
 
 doctor() {
-    report="SphinxPi System Doctor\n\nArchitecture: $(uname -m) / $(dpkg --print-architecture 2>/dev/null || echo unknown)\nKernel: $(uname -r)\n\n"
-    report="$report$(awk '/MemTotal|MemAvailable/ {print $1, int($2/1024) " MB"}' /proc/meminfo 2>/dev/null)\n\n"
-    report="$report$(df -h / | sed -n '1,2p')\n\n"
-    for c in python3 pip3 pipx node npm git gcc make cmake whiptail; do
-        if command -v "$c" >/dev/null 2>&1; then report="$report$c: available\n"; else report="$report$c: missing\n"; fi
-    done
-    message "$report"
+    report_file=$(mktemp "\${TMPDIR:-/tmp}/sphinx-doctor.XXXXXX") || {
+        message "Could not create a temporary diagnostics report."
+        return 1
+    }
+    {
+        echo "SPHINXPI SYSTEM DOCTOR"
+        echo "Generated: $(date 2>/dev/null || echo unavailable)"
+        echo
+        echo "== SYSTEM =="
+        echo "Hostname: $(hostname 2>/dev/null || echo unavailable)"
+        echo "OS: $(. /etc/os-release 2>/dev/null; printf '%s %s' "\${PRETTY_NAME:-unknown}" "\${VERSION_CODENAME:-}")"
+        echo "Architecture: $(uname -m 2>/dev/null) / $(dpkg --print-architecture 2>/dev/null || echo unknown)"
+        echo "Kernel: $(uname -r 2>/dev/null)"
+        echo "Uptime: $(uptime -p 2>/dev/null || uptime 2>/dev/null || echo unavailable)"
+        echo "Load average: $(cut -d' ' -f1-3 /proc/loadavg 2>/dev/null || echo unavailable)"
+        echo
+        echo "== RASPBERRY PI / CPU =="
+        cpu_model=$(awk -F': *' '/^(Model|model name|Hardware|Processor)[[:space:]]*:/ {print $2; exit}' /proc/cpuinfo 2>/dev/null)
+        echo "CPU: \${cpu_model:-not reported by kernel}"
+        echo "CPU cores: $(getconf _NPROCESSORS_ONLN 2>/dev/null || echo unknown)"
+        if [ -r /sys/class/thermal/thermal_zone0/temp ]; then
+            temp_raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo "")
+            case "$temp_raw" in
+                ''|*[!0-9]*) echo "CPU temperature: unavailable" ;;
+                *) echo "CPU temperature: $(awk -v t="$temp_raw" 'BEGIN {printf "%.1f C", t/1000}')" ;;
+            esac
+        else
+            echo "CPU temperature: sensor unavailable"
+        fi
+        if [ -r /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq ]; then
+            freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null || echo "")
+            case "$freq" in
+                ''|*[!0-9]*) echo "CPU frequency: unavailable" ;;
+                *) echo "CPU frequency: $(awk -v f="$freq" 'BEGIN {printf "%.0f MHz", f/1000}')" ;;
+            esac
+        else
+            echo "CPU frequency: not exposed by kernel"
+        fi
+        if command -v vcgencmd >/dev/null 2>&1; then
+            echo "Firmware throttling flags: $(vcgencmd get_throttled 2>&1 | sed 's/^throttled=//')"
+        else
+            echo "Firmware throttling flags: vcgencmd unavailable"
+        fi
+        echo
+        echo "== MEMORY =="
+        awk '
+            /^MemTotal:/ {total=$2}
+            /^MemAvailable:/ {available=$2}
+            /^SwapTotal:/ {swap_total=$2}
+            /^SwapFree:/ {swap_free=$2}
+            END {
+                if (total) printf "RAM: %d MB total, %d MB available\n", total/1024, available/1024
+                else print "RAM: unavailable"
+                if (swap_total) printf "Swap: %d MB total, %d MB free\n", swap_total/1024, swap_free/1024
+                else print "Swap: not configured"
+            }
+        ' /proc/meminfo 2>/dev/null
+        echo
+        echo "== STORAGE =="
+        df -h -x tmpfs -x devtmpfs 2>/dev/null | sed -n '1,12p'
+        echo
+        if command -v lsblk >/dev/null 2>&1; then
+            echo "Block devices:"
+            lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT 2>/dev/null | sed -n '1,12p'
+        else
+            echo "Block devices: lsblk unavailable"
+        fi
+        echo
+        echo "== NETWORK =="
+        if command -v ip >/dev/null 2>&1; then
+            echo "Interfaces:"
+            ip -brief address 2>/dev/null | sed -n '1,8p'
+            echo "Default route:"
+            ip route 2>/dev/null | awk '/^default/ {print; found=1} END {if (!found) print "No default route"}'
+        else
+            echo "Network interfaces: ip command unavailable"
+        fi
+        if command -v getent >/dev/null 2>&1; then
+            if command -v timeout >/dev/null 2>&1; then
+                if timeout 5 getent hosts deb.debian.org >/dev/null 2>&1; then
+                    echo "DNS lookup (deb.debian.org): OK"
+                else
+                    echo "DNS lookup (deb.debian.org): FAILED or timed out"
+                fi
+            elif getent hosts deb.debian.org >/dev/null 2>&1; then
+                echo "DNS lookup (deb.debian.org): OK"
+            else
+                echo "DNS lookup (deb.debian.org): FAILED"
+            fi
+        else
+            echo "DNS lookup: getent unavailable"
+        fi
+        echo
+        echo "== APT / PACKAGE HEALTH =="
+        if command -v dpkg >/dev/null 2>&1; then
+            audit=$(dpkg --audit 2>&1)
+            if [ -n "$audit" ]; then
+                echo "dpkg audit: ATTENTION"
+                printf '%s\n' "$audit" | sed -n '1,10p'
+            else
+                echo "dpkg audit: clean"
+            fi
+            echo "Packages awaiting configuration: $(dpkg -l 2>/dev/null | awk '$1=="iU" || $1=="iF" || $1=="iH" {n++} END {print n+0}')"
+        else
+            echo "dpkg: unavailable"
+        fi
+        echo "APT list files: $(find /var/lib/apt/lists -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d ' ')"
+        echo
+        echo "== DEVELOPMENT RUNTIMES =="
+        for tool in python3 pip3 pipx node npm git gcc g++ make cmake nano ssh whiptail; do
+            if command -v "$tool" >/dev/null 2>&1; then
+                case "$tool" in
+                    python3|node|npm|git|gcc|cmake)
+                        version=$("$tool" --version 2>&1 | sed -n '1p')
+                        echo "$tool: $version"
+                        ;;
+                    *) echo "$tool: available ($(command -v "$tool"))" ;;
+                esac
+            else
+                echo "$tool: not installed"
+            fi
+        done
+        echo
+        echo "== SPHINXPI =="
+        if [ -r /usr/share/sphinxpi/version ]; then
+            echo "Installed version: $(cat /usr/share/sphinxpi/version)"
+        else
+            echo "Installed version: not found"
+        fi
+        for helper in dev-manager.sh archive-manager.sh update.sh track-install.sh remove.sh; do
+            if [ -r "/usr/lib/sphinxpi/$helper" ]; then
+                echo "$helper: readable"
+            else
+                echo "$helper: MISSING"
+            fi
+        done
+        if command -v sphinx >/dev/null 2>&1; then
+            echo "sphinx command: $(command -v sphinx)"
+        else
+            echo "sphinx command: not found in PATH"
+        fi
+        echo
+        echo "== NOTES =="
+        echo "- Sensor and firmware readings depend on kernel/firmware support."
+        echo "- Missing optional commands are informational, not automatically errors."
+        echo "- This report reads system state; it does not change settings or repair packages."
+    } > "$report_file"
+    whiptail --title "SphinxPi System Doctor" --textbox "$report_file" 24 78
+    result=$?
+    rm -f "$report_file"
+    return "$result"
 }
 
 if ! command -v whiptail >/dev/null 2>&1; then
