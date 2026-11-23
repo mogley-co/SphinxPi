@@ -21,11 +21,22 @@ ask() {
     if command -v whiptail >/dev/null 2>&1; then
         whiptail --title "$APP" --inputbox "$prompt" 10 72 "$default" 3>&1 1>&2 2>&3
     else
-        printf "%s" "$prompt"
-        [ -z "$default" ] || printf " [%s]" "$default"
-        printf ": "
+        printf "%s" "$prompt" >&2
+        [ -z "$default" ] || printf " [%s]" "$default" >&2
+        printf ": " >&2
         IFS= read -r answer
         printf "%s" "${answer:-$default}"
+    fi
+}
+
+yesno() {
+    prompt=$1
+    if command -v whiptail >/dev/null 2>&1; then
+        whiptail --title "$APP" --yesno "$prompt" 10 65
+    else
+        printf "%s [y/N] " "$prompt" >&2
+        IFS= read -r answer
+        case "$answer" in y|Y|yes|YES) return 0 ;; *) return 1 ;; esac
     fi
 }
 
@@ -38,14 +49,14 @@ menu() {
             test "Test archive integrity" \
             quit "Exit" 3>&1 1>&2 2>&3
     else
-        echo
-        echo "=== $APP ==="
-        echo "1) Create archive"
-        echo "2) Extract archive"
-        echo "3) List contents"
-        echo "4) Test archive"
-        echo "5) Exit"
-        printf "Choose: "
+        echo >&2
+        echo "=== $APP ===" >&2
+        echo "1) Create archive" >&2
+        echo "2) Extract archive" >&2
+        echo "3) List contents" >&2
+        echo "4) Test archive" >&2
+        echo "5) Exit" >&2
+        printf "Choose: " >&2
         IFS= read -r choice
         case "$choice" in
             1) echo create ;;
@@ -78,8 +89,8 @@ choose_format() {
             tarxz "TAR.XZ (often smaller, slower)" \
             tarbz2 "TAR.BZ2" 3>&1 1>&2 2>&3
     else
-        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2"
-        printf "Format: "
+        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2" >&2
+        printf "Format: " >&2
         IFS= read -r f
         case "$f" in
             1) echo zip ;; 2) echo zipaes ;; 3) echo seven ;; 4) echo tar ;;
@@ -109,13 +120,7 @@ create_archive() {
     output=$(ask "Output archive path" "$PWD/$base$ext")
     [ -n "$output" ] || return
     if [ -e "$output" ]; then
-        if command -v whiptail >/dev/null 2>&1; then
-            whiptail --yesno "The output already exists. Overwrite it?" 10 60 || return
-        else
-            printf "Output exists. Overwrite? [y/N] "
-            IFS= read -r answer
-            case "$answer" in y|Y|yes|YES) ;; *) return ;; esac
-        fi
+        yesno "The output already exists. Overwrite it?" || return
         rm -f -- "$output"
     fi
 
@@ -134,7 +139,7 @@ create_archive() {
             ;;
         seven)
             command -v 7zz >/dev/null 2>&1 || { message "Install 7-Zip support: sudo sphinx archive-install"; return; }
-            if command -v whiptail >/dev/null 2>&1 && whiptail --yesno "Protect this 7Z archive with an AES-256 password?" 10 65; then
+            if yesno "Protect this 7Z archive with an AES-256 password?"; then
                 7zz a -t7z -mhe=on "-mx=$level" -p "$output" "$source"
             else
                 7zz a -t7z "-mx=$level" "$output" "$source"
