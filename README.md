@@ -134,3 +134,13 @@ or partitions are changed.
 - Do not flash or repartition the card during normal SphinxPi upgrades.
 - Desktop and archive tool installation are optional and require explicit confirmation.
 - The existing text login remains available as a recovery path.
+
+
+### Management UI and full removal
+
+- `sphinx ui` opens the whiptail management menu.
+- `sphinx update` asks for confirmation before installing the latest GitHub version.
+- `sphinx uninstall` removes only the SphinxPi package.
+- `sphinx uninstall -f` purges SphinxPi, removes optional packages recorded as newly installed by SphinxPi, and deletes its system state/configuration.
+
+Full removal keeps the home directory, personal files, and a cloned `~/SphinxPi` source repository. It does not run global `apt autoremove`. Package tracking applies to optional desktop/archive installs made after this version; older installs have no reliable manifest and are left untouched.
