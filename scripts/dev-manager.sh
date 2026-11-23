@@ -106,6 +106,11 @@ create_venv() {
         message "That path already exists. Choose a new, empty directory."
         return
     fi
+    parent=$(dirname "$target")
+    if ! mkdir -p "$parent"; then
+        message "Could not create the parent directory:\n$parent"
+        return
+    fi
     if python3 -m venv "$target"; then
         message "Virtual environment created:\n$target\n\nActivate it with:\n. \"$target/bin/activate\""
     else
@@ -173,15 +178,52 @@ node_status() {
     message "$report"
 }
 
+node_install() {
+    if ! has_candidate nodejs; then
+        message "No Node.js package candidate is available for this system's configured architecture and repositories. The original Pi Zero uses ARMv6, so upstream Node.js binaries are not assumed to be compatible."
+        return 1
+    fi
+    if has_candidate npm; then
+        install_packages "Node.js runtime" nodejs npm
+    else
+        install_packages "Node.js runtime" nodejs
+    fi
+}
+
+node_project_package() {
+    if ! command -v npm >/dev/null 2>&1; then
+        message "npm is not installed. Install Node.js and npm first."
+        return
+    fi
+    project=$(whiptail --title "Install Node.js Package" --inputbox "Enter the project directory (it must already exist):" 9 70 "$PWD" 3>&1 1>&2 2>&3) || return 0
+    package=$(whiptail --title "Install Node.js Package" --inputbox "Enter the npm package name:" 9 70 "" 3>&1 1>&2 2>&3) || return 0
+    [ -n "$project" ] && [ -n "$package" ] || return 0
+    case "$package" in
+        *[!A-Za-z0-9._@/-]*)
+            message "Invalid package name."
+            return
+            ;;
+    esac
+    if [ ! -d "$project" ]; then
+        message "Project directory does not exist:\n$project"
+        return
+    fi
+    if npm install --prefix "$project" -- "$package"; then
+        message "Installed $package in:\n$project"
+    else
+        message "npm package installation failed. Check the project path, package name and network."
+    fi
+}
 node_menu() {
     while :; do
-        choice=$(whiptail --title "Node.js Manager" --menu "Node.js is installed from Debian's configured repositories. SphinxPi checks package availability for your CPU architecture before installing." 16 74 5 \
+        choice=$(whiptail --title "Node.js Manager" --menu "Node.js is installed from Debian's configured repositories. SphinxPi checks package availability for your CPU architecture before installing." 17 74 6 \
             install "Install / repair Node.js and npm" \
             update "Update installed Node.js and npm through APT" \
             status "Show Node.js, npm and global packages" \
+            package "Install a package in a project" \
             back "Back" 3>&1 1>&2 2>&3) || return 0
         case "$choice" in
-            install) install_packages "Node.js runtime" nodejs npm ;;
+            install) node_install ;;
             update)
                 packages=""
                 for p in nodejs npm; do
@@ -195,6 +237,7 @@ node_menu() {
                 fi
                 ;;
             status) node_status ;;
+            package) node_project_package ;;
             back) return 0 ;;
         esac
     done
