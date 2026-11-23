@@ -21,6 +21,11 @@ Usage:
   sphinx desktop-layout   Move LXPanel to the top
   sphinx archive-install  Install optional archive tools (root required)
   sphinx archive          Open Archive Manager
+  sphinx dev               Open Development Manager
+  sphinx python            Open Python Manager
+  sphinx node              Open Node.js Manager
+  sphinx tools              Open Developer Tools Manager
+  sphinx doctor             Run system diagnostics
   sphinx uninstall        Remove SphinxPi (add -f for full system removal)
   sphinx ui               Open the SphinxPi management menu
 
@@ -109,6 +114,25 @@ case "${1:-help}" in
         run_helper desktop-layout.sh
         ;;
     archive-install) run_helper archive-install.sh ;;
+    dev|python|node|tools|doctor)
+        mode=menu
+        case "$1" in
+            python) mode=python ;;
+            node) mode=node ;;
+            tools) mode=tools ;;
+            doctor) mode=doctor ;;
+        esac
+        if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
+            if ! command -v runuser >/dev/null 2>&1 || ! command -v getent >/dev/null 2>&1; then
+                echo "Cannot launch the Development Manager for the sudo user: runuser/getent is missing." >&2
+                exit 1
+            fi
+            user_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+            [ -n "$user_home" ] || { echo "Could not determine the sudo user's home directory." >&2; exit 1; }
+            exec runuser -u "$SUDO_USER" -- env HOME="$user_home" sh "$LIB_DIR/dev-manager.sh" "$mode"
+        fi
+        run_helper dev-manager.sh "$mode"
+        ;;
     archive)
         if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
             if ! command -v runuser >/dev/null 2>&1 || ! command -v getent >/dev/null 2>&1; then
@@ -135,8 +159,8 @@ case "${1:-help}" in
         ;;
     ui)
         command -v whiptail >/dev/null 2>&1 || { echo 'Install the UI with: sudo apt install whiptail'; exit 1; }
-        choice=$(whiptail --title 'SphinxPi Control Center' --menu 'Choose an action' 15 62 5 update 'Update SphinxPi' remove 'Uninstall SphinxPi' full 'Full system removal' version 'Show installed version' 3>&1 1>&2 2>&3) || exit 0
-        case "$choice" in update) exec "$0" update ;; remove) exec "$0" uninstall ;; full) exec "$0" uninstall -f ;; version) exec "$0" version ;; esac
+        choice=$(whiptail --title 'SphinxPi Control Center' --menu 'Choose an action' 18 68 7 update 'Update SphinxPi' dev 'Development Manager' archive 'Archive Manager' remove 'Uninstall SphinxPi' full 'Full system removal' version 'Show installed version' 3>&1 1>&2 2>&3) || exit 0
+        case "$choice" in update) exec "$0" update ;; dev) exec "$0" dev ;; archive) exec "$0" archive ;; remove) exec "$0" uninstall ;; full) exec "$0" uninstall -f ;; version) exec "$0" version ;; esac
         ;;
     *)
         echo "Unknown command: $1" >&2
