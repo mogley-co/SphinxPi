@@ -6,6 +6,9 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+if command -v whiptail >/dev/null 2>&1; then
+ whiptail --title "SphinxPi Updater" --yesno "Download, build and install the latest SphinxPi version from GitHub?" 9 65 || exit 0
+fi
 ARCHIVE_URL="https://codeload.github.com/mogley-co/SphinxPi/tar.gz/refs/heads/main"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/sphinxpi-update.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT HUP INT TERM
