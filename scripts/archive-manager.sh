@@ -123,10 +123,10 @@ create_archive() {
     [ -n "$format" ] || return 0
     case "$format" in
         zip)
-            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sudo sphinx archive-install"; return 0; fi
+            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sphinx archive-install as root"; return 0; fi
             ;;
         zipaes|seven)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sphinx archive-install as root"; return 0; fi
             ;;
     esac
     case "$format" in
@@ -151,20 +151,25 @@ create_archive() {
             "$source_real"/*) message "Choose an output path outside the source folder so the archive does not include itself."; return 0 ;;
         esac
     fi
+    output_dir=$(dirname -- "$output")
+    if [ ! -d "$output_dir" ]; then message "The output directory does not exist."; return 0; fi
     if [ -d "$output" ]; then message "Output path is a directory."; return 0; fi
-    if [ -e "$output" ]; then
-        yesno "The output already exists. Replace it?" || return 0
+    if [ -e "$output" ] || [ -L "$output" ]; then
+        yesno "The output already exists. Replace it only after the new archive is created?" || return 0
     fi
 
-    level=$(ask "Compression level (0 = fastest, 9 = strongest; TAR ignores this)" "4") || return 0
-    case "$level" in 0|1|2|3|4|5|6|7|8|9) ;; *) message "Invalid compression level."; return 0 ;; esac
+    final_output=$output
+    tmp_output=$(mktemp "$output_dir/.sphinxpi-archive.XXXXXX") || { message "Could not create a temporary output file."; return 0; }
+    rm -f -- "$tmp_output"
+    output=$tmp_output
+
+    level=$(ask "Compression level (0 = fastest, 9 = strongest; TAR ignores this)" "4") || { rm -f -- "$tmp_output"; return 0; }
+    case "$level" in 0|1|2|3|4|5|6|7|8|9) ;; *) rm -f -- "$tmp_output"; message "Invalid compression level."; return 0 ;; esac
     case "$format:$level" in
         seven:7|seven:8|seven:9|tarxz:7|tarxz:8|tarxz:9)
-            yesno "This compression level can use a lot of memory and may make a 512 MB Pi Zero unresponsive. Continue?" || return 0
+            yesno "This compression level can use a lot of memory and may make a 512 MB Pi Zero unresponsive. Continue?" || { rm -f -- "$tmp_output"; return 0; }
             ;;
     esac
-
-    if [ -e "$output" ]; then rm -f -- "$output"; fi
 
     case "$format" in
         zip)
@@ -196,10 +201,16 @@ create_archive() {
     esac
 
     if [ -f "$output" ]; then
-        size=$(du -h "$output" | awk '{print $1}')
-        message "Archive created.\n\nFile: $output\nSize: $size"
+        if mv -f -- "$output" "$final_output"; then
+            size=$(du -h "$final_output" | awk '{print $1}')
+            message "Archive created.\n\nFile: $final_output\nSize: $size"
+        else
+            rm -f -- "$output"
+            message "Could not move the completed archive into place. The previous output was preserved."
+        fi
     else
-        message "No output archive was created. Check the error output."
+        rm -f -- "$output"
+        message "No output archive was created. Check the error output. The previous output was preserved."
     fi
 }
 
@@ -216,6 +227,8 @@ extract_archive() {
     dest=$(expand_path "$dest")
     [ -n "$dest" ] || return 0
     if ! mkdir -p -- "$dest"; then message "Could not create the destination directory."; return 0; fi
+    if [ -L "$dest" ]; then message "For safety, choose a real directory, not a symbolic link."; return 0; fi
+    dest=$(realpath -e -- "$dest") || { message "Could not resolve the destination directory."; return 0; }
     contents=$(find "$dest" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) || { message "Could not inspect the destination directory."; return 0; }
     if [ -n "$contents" ]; then
         message "For safety, extraction is allowed only into an empty directory. Create a new folder and try again."
@@ -224,11 +237,11 @@ extract_archive() {
 
     case "$archive" in
         *.zip|*.7z)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sphinx archive-install as root"; return 0; fi
             if 7z x "-o$dest" "$archive"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Check the archive and password."; fi
             ;;
         *.tar|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2)
-            if tar -xf "$archive" -C "$dest"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Do not use files from an untrusted archive."; fi
+            if tar --no-same-owner --no-same-permissions -xf "$archive" -C "$dest"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Do not use files from an untrusted archive."; fi
             ;;
         *) message "Unknown extension. Supported: zip, 7z, tar, tar.gz, tar.xz, tar.bz2."; return 0 ;;
     esac
@@ -240,7 +253,7 @@ list_archive() {
     [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
         *.zip|*.7z)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sphinx archive-install as root"; return 0; fi
             if 7z l "$archive"; then pause_output; else message "Could not list this archive."; fi
             ;;
         *.tar)
@@ -265,7 +278,7 @@ test_archive() {
     [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
         *.zip|*.7z)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sphinx archive-install as root"; return 0; fi
             if 7z t "$archive"; then message "Archive integrity test passed."; else message "Archive test FAILED. The file may be damaged or the password may be incorrect."; fi
             ;;
         *.tar.gz|*.tgz)
