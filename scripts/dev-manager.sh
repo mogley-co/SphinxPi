@@ -424,8 +424,11 @@ doctor() {
         echo "- Missing optional commands are informational, not automatically errors."
         echo "- This report reads system state; it does not change settings or repair packages."
     } > "$report_file"
-    whiptail --title "SphinxPi System Doctor" --textbox "$report_file" 24 78
-    result=$?
+    if whiptail --title "SphinxPi System Doctor" --textbox "$report_file" 24 78; then
+        result=0
+    else
+        result=$?
+    fi
     rm -f "$report_file"
     return "$result"
 }
