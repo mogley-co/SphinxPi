@@ -26,6 +26,13 @@ Usage:
   sphinx node             Open Node.js Manager
   sphinx tools            Open Developer Tools Manager
   sphinx doctor           Run system diagnostics
+  sphinx system           Open System Manager
+  sphinx monitor          Open Resource Monitor
+  sphinx backup           Open Backup Manager
+  sphinx network          Open Network Manager
+  sphinx services         Open Service Manager
+  sphinx logs             Open Log Viewer
+  sphinx apps             Search and install 100+ Debian apps
   sphinx uninstall        Remove SphinxPi (add -f for full system removal)
   sphinx ui               Open the SphinxPi management menu
 
@@ -114,6 +121,13 @@ case "${1:-help}" in
         run_helper desktop-layout.sh
         ;;
     archive-install) run_helper archive-install.sh ;;
+    system|monitor|backup|network|services|logs|apps)
+        mode=menu
+        case "$1" in
+            monitor|backup|network|services|logs|apps) mode="$1" ;;
+        esac
+        run_helper system-manager.sh "$mode"
+        ;;
     dev|python|node|tools|doctor)
         mode=menu
         case "$1" in
@@ -159,8 +173,8 @@ case "${1:-help}" in
         ;;
     ui)
         command -v whiptail >/dev/null 2>&1 || { echo 'Install the UI with: sudo apt install whiptail'; exit 1; }
-        choice=$(whiptail --title 'SphinxPi Control Center' --menu 'Choose an action' 18 68 7 update 'Update SphinxPi' dev 'Development Manager' archive 'Archive Manager' remove 'Uninstall SphinxPi' full 'Full system removal' version 'Show installed version' 3>&1 1>&2 2>&3) || exit 0
-        case "$choice" in update) exec "$0" update ;; dev) exec "$0" dev ;; archive) exec "$0" archive ;; remove) exec "$0" uninstall ;; full) exec "$0" uninstall -f ;; version) exec "$0" version ;; esac
+        choice=$(whiptail --title 'SphinxPi Control Center' --menu 'Choose an action' 20 72 8 update 'Update SphinxPi' system 'System Manager' dev 'Development Manager' archive 'Archive Manager' remove 'Uninstall SphinxPi' full 'Full system removal' version 'Show installed version' 3>&1 1>&2 2>&3) || exit 0
+        case "$choice" in update) exec "$0" update ;; system) exec "$0" system ;; dev) exec "$0" dev ;; archive) exec "$0" archive ;; remove) exec "$0" uninstall ;; full) exec "$0" uninstall -f ;; version) exec "$0" version ;; esac
         ;;
     *)
         echo "Unknown command: $1" >&2
