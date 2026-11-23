@@ -25,7 +25,7 @@ if [ "$ARCH" != "armel" ] || [ "$(uname -m)" != "armv6l" ]; then
 fi
 
 echo "SphinxPi Archive Manager installer"
-echo "This installs whiptail, ZIP tools and 7-Zip for Debian Trixie ($ARCH)."
+echo "This installs every package required by Archive Manager: whiptail, ZIP tools, 7-Zip, TAR, gzip and bzip2 for Debian Trixie ($ARCH)."
 echo "The Debian 7zip package provides the '7z' command."
 echo "It does not change boot, kernel, firmware, partitions or network settings."
 printf "Continue? [y/N] "
@@ -37,11 +37,11 @@ esac
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-/usr/lib/sphinxpi/track-install.sh whiptail zip unzip 7zip
-apt-get install --no-install-recommends whiptail zip unzip 7zip
+/usr/lib/sphinxpi/track-install.sh whiptail zip unzip 7zip tar gzip bzip2
+apt-get install --no-install-recommends whiptail zip unzip 7zip tar gzip bzip2
 
 echo
-for cmd in whiptail zip unzip 7z; do
+for cmd in whiptail zip unzip 7z tar gzip bzip2; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "Installation finished, but '$cmd' was not found."
         echo "Check the apt output above before using the Archive Manager."
