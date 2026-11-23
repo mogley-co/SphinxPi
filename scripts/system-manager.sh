@@ -273,7 +273,7 @@ case "$MODE" in
     apps) apps_manager ;;
     menu)
         while :; do
-            choice=$(whiptail --title "SphinxPi System Manager" --menu "Lightweight system tools for Raspberry Pi Zero." 20 74 8 \
+            choice=$(whiptail --title "SphinxPi System Manager" --menu "System tools for Debian-based systems." 20 74 8 \
                 monitor "Resource Monitor" \
                 backup "Backup Manager" \
                 network "Network Manager" \
