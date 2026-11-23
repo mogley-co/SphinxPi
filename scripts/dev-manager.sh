@@ -180,7 +180,7 @@ node_status() {
 
 node_install() {
     if ! has_candidate nodejs; then
-        message "No Node.js package candidate is available for this system's configured architecture and repositories. The original Pi Zero uses ARMv6, so upstream Node.js binaries are not assumed to be compatible."
+        message "No Node.js package candidate is available for this system's configured architecture and repositories. upstream Node.js binaries are not assumed to support every CPU architecture."
         return 1
     fi
     if has_candidate npm; then
@@ -293,7 +293,7 @@ doctor() {
         echo "Uptime: $(uptime -p 2>/dev/null || uptime 2>/dev/null || echo unavailable)"
         echo "Load average: $(cut -d' ' -f1-3 /proc/loadavg 2>/dev/null || echo unavailable)"
         echo
-        echo "== RASPBERRY PI / CPU =="
+        echo "== CPU / HARDWARE =="
         cpu_model=$(awk -F': *' '/^(Model|model name|Hardware|Processor)[[:space:]]*:/ {print $2; exit}' /proc/cpuinfo 2>/dev/null)
         echo "CPU: \${cpu_model:-not reported by kernel}"
         echo "CPU cores: $(getconf _NPROCESSORS_ONLN 2>/dev/null || echo unknown)"
