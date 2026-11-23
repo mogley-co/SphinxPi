@@ -17,13 +17,32 @@ SphinxPi uses a minimal LXDE desktop profile built around Openbox. LXPanel provi
 
 The original Pi Zero W has 512 MB RAM and a single-core ARMv6 CPU. Debian Trixie provides LXDE components for the original Pi's armel architecture. Performance will still be limited, especially with browsers or several applications open.
 
-## Install the SphinxPi command
+## Install the SphinxPi Debian package
+
+SphinxPi is distributed as a normal Debian `.deb` package. The package installs
+its command in `/usr/bin/sphinx` and its private helper scripts in
+`/usr/lib/sphinxpi`.
+
+Build it from a checkout:
 
 ```sh
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
-sh scripts/install.sh  # if logged in as root on DietPi; otherwise use sudo sh scripts/install.sh
+sh scripts/build-deb.sh
+sudo apt install ./dist/sphinxpi_0.1.1_all.deb
 ```
+
+Or build and install in one step:
+
+```sh
+sh scripts/install.sh
+```
+
+To upgrade, build the newer package and install the new `.deb` with
+`sudo apt install ./dist/sphinxpi_VERSION_all.deb`. A package upgrade replaces
+the old Debian-managed files. The package's pre-install step also removes the
+legacy `/usr/local/bin/sphinx` command so it cannot shadow the new
+`/usr/bin/sphinx` command.
 
 ## Optional desktop
 
@@ -84,16 +103,20 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 - `sphinx desktop-layout`
 - `sphinx archive-install` (run as root; use `sudo` from a normal account)
 - `sphinx archive`
-- `sphinx uninstall` (run as root; removes SphinxPi files only)
+- `sphinx uninstall` (uses Debian's package manager)
 
 ## Uninstall
 
-From the repository directory, run `sh scripts/uninstall.sh` as root, or
-`sudo sh scripts/uninstall.sh` from a normal account. You can also run
-`sphinx uninstall` after installation. The script asks for confirmation.
-It removes the SphinxPi CLI, helper scripts and `/etc/sphinxpi` configuration.
-It deliberately leaves LXDE, Xorg, archive utilities, personal files and all
-boot/kernel/firmware/partition settings untouched.
+Use Debian's package manager:
+
+```sh
+sudo apt remove sphinxpi
+```
+
+Or run `sphinx uninstall`. This invokes the same package-manager removal.
+Optional LXDE and archive packages are intentionally not removed because they
+may be used by other software. No personal files, boot files, kernel, firmware
+or partitions are changed.
 
 ## Safety
 
