@@ -123,10 +123,10 @@ create_archive() {
     [ -n "$format" ] || return 0
     case "$format" in
         zip)
-            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sphinx archive-install as root"; return 0; fi
+            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
             ;;
         zipaes|seven)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sphinx archive-install as root"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
             ;;
     esac
     case "$format" in
@@ -241,7 +241,7 @@ extract_archive() {
 
     case "$archive" in
         *.zip|*.7z)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sphinx archive-install as root"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
             if 7z x "-o$dest" "$archive"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Check the archive and password."; fi
             ;;
         *.tar|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2)
@@ -257,7 +257,7 @@ list_archive() {
     [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
         *.zip|*.7z)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sphinx archive-install as root"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
             if 7z l "$archive"; then pause_output; else message "Could not list this archive."; fi
             ;;
         *.tar)
@@ -282,7 +282,7 @@ test_archive() {
     [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
         *.zip|*.7z)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sphinx archive-install as root"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
             if 7z t "$archive"; then message "Archive integrity test passed."; else message "Archive test FAILED. The file may be damaged or the password may be incorrect."; fi
             ;;
         *.tar.gz|*.tgz)
