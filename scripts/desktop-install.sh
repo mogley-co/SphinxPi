@@ -6,24 +6,8 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-if [ ! -r /etc/os-release ]; then
-    echo "Cannot identify the operating system. Nothing changed."
-    exit 1
-fi
-. /etc/os-release
-
-if [ "${VERSION_CODENAME:-}" != "trixie" ]; then
-    echo "This desktop profile is currently prepared for Debian Trixie."
-    echo "Detected: ${PRETTY_NAME:-unknown}"
-    exit 1
-fi
-
+sh /usr/lib/sphinxpi/platform-check.sh
 ARCH=$(dpkg --print-architecture)
-if [ "$ARCH" != "armel" ] || [ "$(uname -m)" != "armv6l" ]; then
-    echo "The SphinxPi desktop profile targets the original Pi Zero (ARMv6 / armel)."
-    echo "Detected: $(uname -m) / $ARCH"
-    exit 1
-fi
 
 FREE_KB=$(df -Pk / | awk 'NR==2 {print $4}')
 if [ -z "$FREE_KB" ] || [ "$FREE_KB" -lt 1200000 ]; then
@@ -32,13 +16,14 @@ if [ -z "$FREE_KB" ] || [ "$FREE_KB" -lt 1200000 ]; then
     exit 1
 fi
 
-echo "SphinxPi lightweight desktop profile"
-echo "Desktop: LXDE core (Openbox, LXPanel and PCManFM)"
-echo "Architecture: $ARCH"
+PACKAGES="xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme"
+
+echo "SphinxPi lightweight LXDE desktop profile"
+echo "Detected Debian architecture: $ARCH"
 echo "This installs Xorg, Xinit, LXDE core and lightweight utilities."
 echo "It will NOT enable automatic graphical login or change the default boot target."
-echo "Network configuration is left untouched to protect your existing Wi-Fi connection."
-echo "Desktop performance depends on your hardware and available RAM; avoid running more applications than your system can handle."
+echo "Network configuration is left untouched."
+echo "Desktop performance depends on your hardware and available RAM."
 printf "Continue? [y/N] "
 read answer
 case "$answer" in
@@ -46,23 +31,28 @@ case "$answer" in
     *) echo "Cancelled. Nothing installed."; exit 0 ;;
 esac
 
-sh /usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-/usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
-apt-get install --no-install-recommends \
-    xserver-xorg \
-    xinit \
-    dbus-x11 \
-    lxde-core \
-    lxterminal \
-    lxappearance \
-    lxtask \
-    lxrandr \
-    fonts-dejavu \
-    adwaita-icon-theme
+
+missing=""
+for package in $PACKAGES; do
+    candidate=$(apt-cache policy "$package" 2>/dev/null | awk '$1 == "Candidate:" {print $2}')
+    if [ -z "$candidate" ] || [ "$candidate" = "(none)" ]; then
+        missing="$missing $package"
+    fi
+done
+
+if [ -n "$missing" ]; then
+    echo "The desktop profile cannot be installed completely on architecture $ARCH."
+    echo "Packages without an APT candidate:$missing"
+    echo "Nothing has been installed."
+    exit 1
+fi
+
+sh /usr/lib/sphinxpi/track-install.sh $PACKAGES
+apt-get install -y --no-install-recommends $PACKAGES
 
 echo
 echo "Lightweight LXDE desktop packages installed."
 echo "No display manager, automatic login, boot target or network settings were changed."
-echo "Create/use a normal non-root account, log in as that account, then run: sphinx desktop"
+echo "Log in as a normal non-root account, then run: sphinx desktop"
