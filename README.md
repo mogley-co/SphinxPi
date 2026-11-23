@@ -127,7 +127,7 @@ Python packages are installed inside virtual environments rather than into
 Debian's externally managed system Python. Create an environment from the
 Python Manager, then install packages into that environment. The Node.js
 manager uses Debian's APT packages rather than assuming that upstream Node.js
-binaries support ARMv6. It can also install npm packages locally into an existing
+binaries support every CPU architecture. It can also install npm packages locally into an existing
 project directory, avoiding unnecessary global package installation. Every APT installation checks whether a package
 candidate exists for the configured architecture and records newly installed
 packages for SphinxPi's full-removal process. The manager does not silently
