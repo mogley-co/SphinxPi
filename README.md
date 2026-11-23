@@ -22,13 +22,13 @@ The original Pi Zero W has 512 MB RAM and a single-core ARMv6 CPU. Debian Trixie
 ```sh
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
-sudo sh scripts/install.sh
+sh scripts/install.sh  # if logged in as root on DietPi; otherwise use sudo sh scripts/install.sh
 ```
 
 ## Optional desktop
 
 ```sh
-sudo sphinx desktop-install
+sphinx desktop-install  # as root; use sudo from a normal user account
 ```
 
 This installs Xorg, Xinit, LXDE core and lightweight desktop utilities. It does not enable a display manager, automatic graphical login, change the default boot target, replace the kernel, or alter partitions.
@@ -50,7 +50,7 @@ sphinx desktop-layout
 Install the optional archive tools:
 
 ```sh
-sudo sphinx archive-install
+sphinx archive-install  # as root; use sudo from a normal user account
 ```
 
 Open the interactive terminal menu:
