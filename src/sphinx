@@ -86,7 +86,7 @@ case "${1:-help}" in
         if [ "$(id -u)" -eq 0 ]; then
             run_helper update.sh
         elif command -v sudo >/dev/null 2>&1; then
-            exec sudo "$LIB_DIR/update.sh"
+            exec sudo sh "$LIB_DIR/update.sh"
         else
             echo "Run this command as root: sudo sphinx update" >&2
             exit 1
