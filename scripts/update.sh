@@ -63,7 +63,7 @@ else
 fi
 # Record only packages that this install will add, so full removal does not
 # purge tools that were already installed or needed by other software.
-/usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
+sh /usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
 apt-get install -y --no-install-recommends $ARCHIVE_PACKAGES
 
 echo
