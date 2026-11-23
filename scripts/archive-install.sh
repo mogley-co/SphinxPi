@@ -35,9 +35,9 @@ case "$answer" in
     *) echo "Cancelled. Nothing installed."; exit 0 ;;
 esac
 
-/usr/lib/sphinxpi/track-install.sh whiptail zip unzip 7zip xz-utils
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
+/usr/lib/sphinxpi/track-install.sh whiptail zip unzip 7zip xz-utils
 apt-get install --no-install-recommends whiptail zip unzip 7zip xz-utils
 
 echo
