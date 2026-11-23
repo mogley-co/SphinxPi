@@ -8,7 +8,7 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-for cmd in tar gzip xz bzip2 du basename mkdir find; do
+for cmd in tar gzip xz bzip2 du basename mkdir find realpath; do
     command -v "$cmd" >/dev/null 2>&1 || {
         echo "Missing required command: $cmd"
         exit 1
@@ -135,6 +135,14 @@ create_archive() {
     output=$(ask "Output archive path" "$PWD/$base$ext") || return 0
     output=$(expand_path "$output")
     [ -n "$output" ] || return 0
+    source_real=$(realpath -e -- "$source") || { message "Could not resolve the source path."; return 0; }
+    output_real=$(realpath -m -- "$output") || { message "Could not resolve the output path."; return 0; }
+    if [ "$source_real" = "$output_real" ]; then message "The archive output cannot overwrite its source."; return 0; fi
+    if [ -d "$source_real" ]; then
+        case "$output_real" in
+            "$source_real"/*) message "Choose an output path outside the source folder so the archive does not include itself."; return 0 ;;
+        esac
+    fi
     if [ -d "$output" ]; then message "Output path is a directory."; return 0; fi
     if [ -e "$output" ]; then
         yesno "The output already exists. Replace it?" || return 0
