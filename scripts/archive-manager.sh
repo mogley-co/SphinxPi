@@ -3,7 +3,7 @@ set -eu
 
 APP="SphinxPi Archive Manager"
 
-for cmd in tar gzip xz bzip2 du basename mkdir find realpath; do
+for cmd in tar gzip bzip2 du basename mkdir find realpath; do
     command -v "$cmd" >/dev/null 2>&1 || {
         echo "Missing required command: $cmd"
         exit 1
@@ -92,12 +92,12 @@ choose_format() {
             tarxz "TAR.XZ (often smaller, slower)" \
             tarbz2 "TAR.BZ2" 3>&1 1>&2 2>&3
     else
-        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2" >&2
+        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.BZ2" >&2
         printf "Format: " >&2
         IFS= read -r f || return 1
         case "$f" in
             1) echo zip ;; 2) echo zipaes ;; 3) echo seven ;; 4) echo tar ;;
-            5) echo targz ;; 6) echo tarxz ;; 7) echo tarbz2 ;;
+            5) echo targz ;; 6) echo tarbz2 ;;
             *) echo "" ;;
         esac
     fi
@@ -129,7 +129,6 @@ create_archive() {
         seven) ext=".7z" ;;
         tar) ext=".tar" ;;
         targz) ext=".tar.gz" ;;
-        tarxz) ext=".tar.xz" ;;
         tarbz2) ext=".tar.bz2" ;;
         *) message "Unknown format."; return 0 ;;
     esac
@@ -165,7 +164,7 @@ create_archive() {
     level=$(ask "Compression level (0 = fastest, 9 = strongest; TAR ignores this)" "4") || { rm -f -- "$tmp_output"; return 0; }
     case "$level" in 0|1|2|3|4|5|6|7|8|9) ;; *) rm -f -- "$tmp_output"; message "Invalid compression level."; return 0 ;; esac
     case "$format:$level" in
-        seven:7|seven:8|seven:9|tarxz:7|tarxz:8|tarxz:9)
+        seven:7|seven:8|seven:9)
             yesno "This compression level can use a lot of memory and may make a 512 MB Pi Zero unresponsive. Continue?" || { rm -f -- "$tmp_output"; return 0; }
             ;;
     esac
@@ -190,9 +189,6 @@ create_archive() {
             ;;
         targz)
             if tar -I "gzip -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.GZ creation failed."; return 0; fi
-            ;;
-        tarxz)
-            if tar -I "xz -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.XZ creation failed."; return 0; fi
             ;;
         tarbz2)
             if tar -I "bzip2 -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.BZ2 creation failed."; return 0; fi
@@ -239,10 +235,10 @@ extract_archive() {
             if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
             if 7z x "-o$dest" "$archive"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Check the archive and password."; fi
             ;;
-        *.tar|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2)
+        *.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2)
             if tar --no-same-owner --no-same-permissions -xf "$archive" -C "$dest"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Do not use files from an untrusted archive."; fi
             ;;
-        *) message "Unknown extension. Supported: zip, 7z, tar, tar.gz, tar.xz, tar.bz2."; return 0 ;;
+        *) message "Unknown extension. Supported: zip, 7z, tar, tar.gz and tar.bz2."; return 0 ;;
     esac
 }
 
@@ -260,9 +256,6 @@ list_archive() {
             ;;
         *.tar.gz|*.tgz)
             if tar -tzf "$archive"; then pause_output; else message "Could not list this archive."; fi
-            ;;
-        *.tar.xz|*.txz)
-            if tar -tJf "$archive"; then pause_output; else message "Could not list this archive."; fi
             ;;
         *.tar.bz2|*.tbz2)
             if tar -tjf "$archive"; then pause_output; else message "Could not list this archive."; fi
@@ -282,9 +275,6 @@ test_archive() {
             ;;
         *.tar.gz|*.tgz)
             if gzip -t "$archive" && tar -tzf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
-            ;;
-        *.tar.xz|*.txz)
-            if xz -t "$archive" && tar -tJf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
             ;;
         *.tar.bz2|*.tbz2)
             if bzip2 -t "$archive" && tar -tjf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
