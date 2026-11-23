@@ -57,14 +57,14 @@ menu() {
             test "Test archive integrity" \
             quit "Exit" 3>&1 1>&2 2>&3
     else
-        echo
-        echo "=== $APP ==="
-        echo "1) Create archive"
-        echo "2) Extract archive"
-        echo "3) List contents"
-        echo "4) Test archive"
-        echo "5) Exit"
-        printf "Choose: "
+        echo >&2
+        echo "=== $APP ===" >&2
+        echo "1) Create archive" >&2
+        echo "2) Extract archive" >&2
+        echo "3) List contents" >&2
+        echo "4) Test archive" >&2
+        echo "5) Exit" >&2
+        printf "Choose: " >&2
         IFS= read -r choice || return 1
         case "$choice" in
             1) echo create ;;
@@ -97,8 +97,8 @@ choose_format() {
             tarxz "TAR.XZ (often smaller, slower)" \
             tarbz2 "TAR.BZ2" 3>&1 1>&2 2>&3
     else
-        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2"
-        printf "Format: "
+        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.XZ | 7 TAR.BZ2" >&2
+        printf "Format: " >&2
         IFS= read -r f || return 1
         case "$f" in
             1) echo zip ;; 2) echo zipaes ;; 3) echo seven ;; 4) echo tar ;;
@@ -209,8 +209,9 @@ extract_archive() {
     dest=$(ask "Extract into this directory (use a new empty folder)" "$PWD") || return 0
     dest=$(expand_path "$dest")
     [ -n "$dest" ] || return 0
-    mkdir -p -- "$dest"
-    if [ -n "$(find "$dest" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]; then
+    if ! mkdir -p -- "$dest"; then message "Could not create the destination directory."; return 0; fi
+    contents=$(find "$dest" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) || { message "Could not inspect the destination directory."; return 0; }
+    if [ -n "$contents" ]; then
         message "For safety, extraction is allowed only into an empty directory. Create a new folder and try again."
         return 0
     fi
@@ -233,15 +234,23 @@ list_archive() {
     [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
         *.zip|*.7z)
-            if command -v 7z >/dev/null 2>&1; then 7z l "$archive"; else message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install"; return 0; fi
+            if 7z l "$archive"; then pause_output; else message "Could not list this archive."; fi
             ;;
-        *.tar) tar -tf "$archive" ;;
-        *.tar.gz|*.tgz) tar -tzf "$archive" ;;
-        *.tar.xz|*.txz) tar -tJf "$archive" ;;
-        *.tar.bz2|*.tbz2) tar -tjf "$archive" ;;
+        *.tar)
+            if tar -tf "$archive"; then pause_output; else message "Could not list this archive."; fi
+            ;;
+        *.tar.gz|*.tgz)
+            if tar -tzf "$archive"; then pause_output; else message "Could not list this archive."; fi
+            ;;
+        *.tar.xz|*.txz)
+            if tar -tJf "$archive"; then pause_output; else message "Could not list this archive."; fi
+            ;;
+        *.tar.bz2|*.tbz2)
+            if tar -tjf "$archive"; then pause_output; else message "Could not list this archive."; fi
+            ;;
         *) message "Unsupported archive extension."; return 0 ;;
     esac
-    pause_output
 }
 
 test_archive() {
