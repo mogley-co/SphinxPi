@@ -49,6 +49,7 @@ esac
 /usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
+/usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
 apt-get install --no-install-recommends \
     xserver-xorg \
     xinit \
