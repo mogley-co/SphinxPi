@@ -111,8 +111,7 @@ Archive Manager. It includes:
   Debian repositories; inspect versions and globally installed npm packages.
 - **Developer Tools:** install or update Git, build-essential, Make, CMake,
   Nano and the OpenSSH client.
-- **System Doctor:** inspect architecture, memory, root filesystem space and
-  whether common development commands are available.
+- **System Doctor:** inspect OS and kernel versions, CPU model/cores, temperature and frequency when exposed, Raspberry Pi firmware throttling flags when `vcgencmd` exists, RAM and swap, mounted storage and block devices, network interfaces/default route/DNS, APT and dpkg health, development runtime versions, and SphinxPi installation files. The report is read-only and scrollable.
 
 You can open individual sections directly with `sphinx python`,
 `sphinx node`, `sphinx tools` and `sphinx doctor`.
