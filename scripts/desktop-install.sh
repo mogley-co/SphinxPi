@@ -46,6 +46,7 @@ case "$answer" in
     *) echo "Cancelled. Nothing installed."; exit 0 ;;
 esac
 
+/usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install --no-install-recommends \
