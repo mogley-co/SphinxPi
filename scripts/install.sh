@@ -31,6 +31,8 @@ esac
 [ -f "$SOURCE" ] || { echo "Missing CLI source: $SOURCE"; exit 1; }
 [ -f "$SCRIPT_DIR/desktop-install.sh" ] || { echo "Missing desktop installer."; exit 1; }
 [ -f "$SCRIPT_DIR/desktop-layout.sh" ] || { echo "Missing desktop layout helper."; exit 1; }
+[ -f "$SCRIPT_DIR/archive-install.sh" ] || { echo "Missing archive installer."; exit 1; }
+[ -f "$SCRIPT_DIR/archive-manager.sh" ] || { echo "Missing archive manager."; exit 1; }
 
 DEST="/usr/local/bin/sphinx"
 LIB_DIR="/usr/lib/sphinxpi"
@@ -46,6 +48,8 @@ install -D -m 0755 "$SOURCE" "$DEST"
 install -d -m 0755 "$LIB_DIR"
 install -m 0755 "$SCRIPT_DIR/desktop-install.sh" "$LIB_DIR/desktop-install.sh"
 install -m 0755 "$SCRIPT_DIR/desktop-layout.sh" "$LIB_DIR/desktop-layout.sh"
+install -m 0755 "$SCRIPT_DIR/archive-install.sh" "$LIB_DIR/archive-install.sh"
+install -m 0755 "$SCRIPT_DIR/archive-manager.sh" "$LIB_DIR/archive-manager.sh"
 mkdir -p "$CONFIG_DIR"
 if [ ! -f "$CONFIG_DIR/version" ]; then
     printf '%s\n' "0.1.0" > "$CONFIG_DIR/version"
