@@ -18,10 +18,11 @@ if [ "${ID:-}" != "debian" ] || [ "${VERSION_CODENAME:-}" != "trixie" ]; then
 fi
 
 ARCH=$(dpkg --print-architecture)
-case "$ARCH" in
-    armel|armhf) ;;
-    *) echo "Unsupported Debian architecture: $ARCH"; exit 1 ;;
-esac
+if [ "$ARCH" != "armel" ] || [ "$(uname -m)" != "armv6l" ]; then
+    echo "The Archive Manager installer targets the original Pi Zero (ARMv6 / armel)."
+    echo "Detected: $(uname -m) / $ARCH"
+    exit 1
+fi
 
 echo "SphinxPi Archive Manager installer"
 echo "This installs whiptail, ZIP tools and 7-Zip for Debian Trixie ($ARCH)."
