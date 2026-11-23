@@ -2,7 +2,7 @@
 set -eu
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "Run this command as root. On DietPi, log in as root and run: sphinx desktop-install"
+    echo "Run this command as root, or use: sudo sphinx desktop-install"
     exit 1
 fi
 
@@ -38,7 +38,7 @@ echo "Architecture: $ARCH"
 echo "This installs Xorg, Xinit, LXDE core and lightweight utilities."
 echo "It will NOT enable automatic graphical login or change the default boot target."
 echo "Network configuration is left untouched to protect your existing Wi-Fi connection."
-echo "The original Pi Zero W has limited RAM and CPU; avoid running many apps together."
+echo "Desktop performance depends on your hardware and available RAM; avoid running more applications than your system can handle."
 printf "Continue? [y/N] "
 read answer
 case "$answer" in
@@ -46,7 +46,7 @@ case "$answer" in
     *) echo "Cancelled. Nothing installed."; exit 0 ;;
 esac
 
-/usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
+sh /usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 /usr/lib/sphinxpi/track-install.sh xserver-xorg xinit dbus-x11 lxde-core lxterminal lxappearance lxtask lxrandr fonts-dejavu adwaita-icon-theme
