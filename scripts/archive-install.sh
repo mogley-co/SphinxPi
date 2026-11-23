@@ -46,7 +46,7 @@ if [ -n "$RAR_CANDIDATE" ] && [ "$RAR_CANDIDATE" != "(none)" ]; then
 else
     echo "RAR extraction plugin is unavailable in the configured APT repositories."
 fi
-/usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
+sh /usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
 apt-get install -y --no-install-recommends $ARCHIVE_PACKAGES
 
 echo
