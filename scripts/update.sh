@@ -48,6 +48,23 @@ if [ ! -f "$PACKAGE" ]; then
 fi
 
 apt-get install -y "$PACKAGE"
+
+echo
+echo "Installing SphinxPi Archive Manager dependencies..."
+apt-get update
+ARCHIVE_PACKAGES="whiptail zip unzip 7zip tar gzip bzip2 zstd lz4"
+RAR_CANDIDATE=$(apt-cache policy 7zip-rar 2>/dev/null | awk '$1 == "Candidate:" {print $2}')
+if [ -n "$RAR_CANDIDATE" ] && [ "$RAR_CANDIDATE" != "(none)" ]; then
+    ARCHIVE_PACKAGES="$ARCHIVE_PACKAGES 7zip-rar"
+    echo "RAR extraction plugin is available and will be installed."
+else
+    echo "RAR extraction plugin is unavailable in the configured APT repositories; other formats will still work."
+fi
+# Record only packages that this install will add, so full removal does not
+# purge tools that were already installed or needed by other software.
+/usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
+apt-get install -y --no-install-recommends $ARCHIVE_PACKAGES
+
 echo
 echo "SphinxPi update finished. Installed version:"
 sphinx version
