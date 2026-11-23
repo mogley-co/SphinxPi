@@ -123,7 +123,6 @@ lz4|Archives|LZ4 compression
 unrar-free|Archives|RAR extractor
 zlib1g|Archives|Compression library
 sqlitebrowser|Databases|SQLite database browser
-sqlite3|Databases|SQLite database CLI
 mariadb-server|Databases|MariaDB database server
 postgresql|Databases|PostgreSQL database server
 redis-server|Databases|Redis server
