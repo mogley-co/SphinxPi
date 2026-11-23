@@ -38,6 +38,18 @@ DEST="/usr/local/bin/sphinx"
 LIB_DIR="/usr/lib/sphinxpi"
 CONFIG_DIR="/etc/sphinxpi"
 
+# Install helper programs first so the new CLI never points to missing helpers.
+install -d -m 0755 "$LIB_DIR"
+install -m 0755 "$SCRIPT_DIR/desktop-install.sh" "$LIB_DIR/desktop-install.sh"
+install -m 0755 "$SCRIPT_DIR/desktop-layout.sh" "$LIB_DIR/desktop-layout.sh"
+install -m 0755 "$SCRIPT_DIR/archive-install.sh" "$LIB_DIR/archive-install.sh"
+install -m 0755 "$SCRIPT_DIR/archive-manager.sh" "$LIB_DIR/archive-manager.sh"
+
+mkdir -p "$CONFIG_DIR"
+if [ ! -f "$CONFIG_DIR/version" ]; then
+    printf '%s\n' "0.1.0" > "$CONFIG_DIR/version"
+fi
+
 if [ -e "$DEST" ]; then
     BACKUP="$DEST.backup.$(date +%Y%m%d%H%M%S)"
     cp -p "$DEST" "$BACKUP"
@@ -45,15 +57,6 @@ if [ -e "$DEST" ]; then
 fi
 
 install -D -m 0755 "$SOURCE" "$DEST"
-install -d -m 0755 "$LIB_DIR"
-install -m 0755 "$SCRIPT_DIR/desktop-install.sh" "$LIB_DIR/desktop-install.sh"
-install -m 0755 "$SCRIPT_DIR/desktop-layout.sh" "$LIB_DIR/desktop-layout.sh"
-install -m 0755 "$SCRIPT_DIR/archive-install.sh" "$LIB_DIR/archive-install.sh"
-install -m 0755 "$SCRIPT_DIR/archive-manager.sh" "$LIB_DIR/archive-manager.sh"
-mkdir -p "$CONFIG_DIR"
-if [ ! -f "$CONFIG_DIR/version" ]; then
-    printf '%s\n' "0.1.0" > "$CONFIG_DIR/version"
-fi
 
 echo "SphinxPi CLI installed."
 echo "No packages, boot files, kernel, firmware, or partitions were changed."
