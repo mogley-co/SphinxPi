@@ -122,6 +122,14 @@ create_archive() {
     format=$(choose_format) || return 0
     [ -n "$format" ] || return 0
     case "$format" in
+        zip)
+            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sudo sphinx archive-install"; return 0; fi
+            ;;
+        zipaes|seven)
+            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install"; return 0; fi
+            ;;
+    esac
+    case "$format" in
         zip|zipaes) ext=".zip" ;;
         seven) ext=".7z" ;;
         tar) ext=".tar" ;;
@@ -146,7 +154,6 @@ create_archive() {
     if [ -d "$output" ]; then message "Output path is a directory."; return 0; fi
     if [ -e "$output" ]; then
         yesno "The output already exists. Replace it?" || return 0
-        rm -f -- "$output"
     fi
 
     level=$(ask "Compression level (0 = fastest, 9 = strongest; TAR ignores this)" "4") || return 0
@@ -157,18 +164,17 @@ create_archive() {
             ;;
     esac
 
+    if [ -e "$output" ]; then rm -f -- "$output"; fi
+
     case "$format" in
         zip)
-            if ! command -v zip >/dev/null 2>&1; then message "ZIP command missing. Run: sudo sphinx archive-install"; return 0; fi
             if zip "-$level" -r "$output" "$source"; then :; else rm -f -- "$output"; message "ZIP creation failed."; return 0; fi
             ;;
         zipaes)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install"; return 0; fi
             message "7-Zip will ask for the AES-256 password in the terminal. The password is not saved in shell history."
             if 7z a -tzip -mem=AES256 "-mx=$level" -p "$output" "$source"; then :; else rm -f -- "$output"; message "Encrypted ZIP creation failed."; return 0; fi
             ;;
         seven)
-            if ! command -v 7z >/dev/null 2>&1; then message "7-Zip command missing. Run: sudo sphinx archive-install"; return 0; fi
             if yesno "Protect this 7Z archive with an AES-256 password?"; then
                 if 7z a -t7z -mhe=on "-mx=$level" -p "$output" "$source"; then :; else rm -f -- "$output"; message "7Z creation failed."; return 0; fi
             else
