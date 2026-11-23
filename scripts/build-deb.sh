@@ -18,7 +18,7 @@ PKGROOT="$WORK/$PACKAGE"
 mkdir -p "$PKGROOT/DEBIAN" "$PKGROOT/usr/bin" "$PKGROOT/usr/lib/sphinxpi" "$PKGROOT/usr/share/sphinxpi"
 
 install -m 0755 "$ROOT/src/sphinx" "$PKGROOT/usr/bin/sphinx"
-for helper in desktop-install.sh desktop-layout.sh archive-install.sh archive-manager.sh update.sh track-install.sh remove.sh; do
+for helper in desktop-install.sh desktop-layout.sh archive-install.sh archive-manager.sh dev-manager.sh update.sh track-install.sh remove.sh; do
     install -m 0755 "$ROOT/scripts/$helper" "$PKGROOT/usr/lib/sphinxpi/$helper"
 done
 install -m 0644 "$ROOT/VERSION" "$PKGROOT/usr/share/sphinxpi/version"
@@ -47,8 +47,8 @@ Priority: optional
 Architecture: $ARCH
 Maintainer: Mogley <mogley@example.invalid>
 Description: Lightweight command-line tools for SphinxPi
- A small Debian package providing the SphinxPi command and optional
- installers for a lightweight LXDE desktop and archive utilities.
+ A small Debian package providing SphinxPi system tools, an interactive
+ development manager, a lightweight LXDE installer and archive utilities.
 EOF
 
 mkdir -p "$OUT"
