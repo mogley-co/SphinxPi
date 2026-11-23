@@ -8,7 +8,7 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-for cmd in tar gzip xz bzip2 du basename mkdir; do
+for cmd in tar gzip xz bzip2 du basename mkdir find; do
     command -v "$cmd" >/dev/null 2>&1 || {
         echo "Missing required command: $cmd"
         exit 1
