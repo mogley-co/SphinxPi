@@ -4,6 +4,7 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE="$ROOT_DIR/src/sphinx"
+VERSION="0.1.0"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "This installer needs root privileges."
@@ -26,16 +27,20 @@ case "${ID:-}" in
 esac
 
 MACHINE=$(uname -m)
-case "$MACHINE" in
-    armv6l|armv7l|aarch64|x86_64) ;;
-    *) echo "Unsupported CPU architecture: $MACHINE"; exit 1 ;;
-esac
+ARCH=$(dpkg --print-architecture 2>/dev/null || true)
+if [ "$MACHINE" != "armv6l" ] || [ "$ARCH" != "armel" ]; then
+    echo "SphinxPi targets the original Raspberry Pi Zero family (ARMv6 / armel)."
+    echo "Detected CPU: $MACHINE"
+    echo "Detected Debian architecture: ${ARCH:-unknown}"
+    exit 1
+fi
 
 [ -f "$SOURCE" ] || { echo "Missing CLI source: $SOURCE"; exit 1; }
 [ -f "$SCRIPT_DIR/desktop-install.sh" ] || { echo "Missing desktop installer."; exit 1; }
 [ -f "$SCRIPT_DIR/desktop-layout.sh" ] || { echo "Missing desktop layout helper."; exit 1; }
 [ -f "$SCRIPT_DIR/archive-install.sh" ] || { echo "Missing archive installer."; exit 1; }
 [ -f "$SCRIPT_DIR/archive-manager.sh" ] || { echo "Missing archive manager."; exit 1; }
+[ -f "$SCRIPT_DIR/uninstall.sh" ] || { echo "Missing uninstaller."; exit 1; }
 
 DEST="/usr/local/bin/sphinx"
 LIB_DIR="/usr/lib/sphinxpi"
@@ -46,11 +51,10 @@ install -m 0755 "$SCRIPT_DIR/desktop-install.sh" "$LIB_DIR/desktop-install.sh"
 install -m 0755 "$SCRIPT_DIR/desktop-layout.sh" "$LIB_DIR/desktop-layout.sh"
 install -m 0755 "$SCRIPT_DIR/archive-install.sh" "$LIB_DIR/archive-install.sh"
 install -m 0755 "$SCRIPT_DIR/archive-manager.sh" "$LIB_DIR/archive-manager.sh"
+install -m 0755 "$SCRIPT_DIR/uninstall.sh" "$LIB_DIR/uninstall.sh"
 
 mkdir -p "$CONFIG_DIR"
-if [ ! -f "$CONFIG_DIR/version" ]; then
-    printf '%s\n' "0.1.0" > "$CONFIG_DIR/version"
-fi
+printf '%s\n' "$VERSION" > "$CONFIG_DIR/version"
 
 if [ -e "$DEST" ]; then
     BACKUP="$DEST.backup.$(date +%Y%m%d%H%M%S)"
