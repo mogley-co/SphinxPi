@@ -25,8 +25,9 @@ if [ "$ARCH" != "armel" ] || [ "$(uname -m)" != "armv6l" ]; then
 fi
 
 echo "SphinxPi Archive Manager installer"
-echo "This installs every package required by Archive Manager: whiptail, ZIP tools, 7-Zip, TAR, gzip and bzip2 for Debian Trixie ($ARCH)."
+echo "This installs Archive Manager dependencies: whiptail, ZIP tools, 7-Zip, TAR, gzip, bzip2, zstd and lz4 for Debian Trixie ($ARCH)."
 echo "The Debian 7zip package provides the '7z' command."
+echo "RAR extraction is enabled when the optional 7zip-rar package is available from your configured repositories; RAR creation is not supported."
 echo "It does not change boot, kernel, firmware, partitions or network settings."
 printf "Continue? [y/N] "
 read answer
@@ -37,11 +38,19 @@ esac
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-/usr/lib/sphinxpi/track-install.sh whiptail zip unzip 7zip tar gzip bzip2
-apt-get install --no-install-recommends whiptail zip unzip 7zip tar gzip bzip2
+ARCHIVE_PACKAGES="whiptail zip unzip 7zip tar gzip bzip2 zstd lz4"
+RAR_CANDIDATE=$(apt-cache policy 7zip-rar 2>/dev/null | awk '$1 == "Candidate:" {print $2}')
+if [ -n "$RAR_CANDIDATE" ] && [ "$RAR_CANDIDATE" != "(none)" ]; then
+    ARCHIVE_PACKAGES="$ARCHIVE_PACKAGES 7zip-rar"
+    echo "RAR extraction plugin is available and will be installed."
+else
+    echo "RAR extraction plugin is unavailable in the configured APT repositories."
+fi
+/usr/lib/sphinxpi/track-install.sh $ARCHIVE_PACKAGES
+apt-get install -y --no-install-recommends $ARCHIVE_PACKAGES
 
 echo
-for cmd in whiptail zip unzip 7z tar gzip bzip2; do
+for cmd in whiptail zip unzip 7z tar gzip bzip2 zstd lz4; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "Installation finished, but '$cmd' was not found."
         echo "Check the apt output above before using the Archive Manager."
@@ -50,4 +59,5 @@ for cmd in whiptail zip unzip 7z tar gzip bzip2; do
 done
 
 echo "Archive tools installed and command checks passed."
+echo "RAR extraction is available only if the 7zip-rar plugin was installed."
 echo "Run 'sphinx archive' as your normal user."
