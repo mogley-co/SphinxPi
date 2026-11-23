@@ -96,7 +96,19 @@ case "${1:-help}" in
         ;;
     archive-install) run_helper archive-install.sh ;;
     archive)
-        if [ "$(id -u)" -eq 0 ]; then echo "Run Archive Manager as a normal user, not root."; exit 1; fi
+        if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
+            if ! command -v runuser >/dev/null 2>&1 || ! command -v getent >/dev/null 2>&1; then
+                echo "Cannot safely launch Archive Manager for the sudo user: runuser/getent is missing." >&2
+                echo "Log in directly as root and run: sphinx archive" >&2
+                exit 1
+            fi
+            user_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+            if [ -z "$user_home" ]; then
+                echo "Could not determine the home directory for sudo user '$SUDO_USER'." >&2
+                exit 1
+            fi
+            exec runuser -u "$SUDO_USER" -- env HOME="$user_home" "$LIB_DIR/archive-manager.sh"
+        fi
         run_helper archive-manager.sh
         ;;
     uninstall)
