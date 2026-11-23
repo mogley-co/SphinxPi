@@ -89,7 +89,6 @@ choose_format() {
             seven "7Z (high compression, AES-256 password option)" \
             tar "TAR (no compression)" \
             targz "TAR.GZ" \
-            tarxz "TAR.XZ (often smaller, slower)" \
             tarbz2 "TAR.BZ2" 3>&1 1>&2 2>&3
     else
         echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.BZ2" >&2
