@@ -59,7 +59,7 @@ Open the interactive terminal menu:
 sphinx archive
 ```
 
-The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.XZ and TAR.BZ2 creation; extraction; content listing; and archive testing. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback.
+The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.XZ and TAR.BZ2 creation; extraction; content listing; and archive testing. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. Debian's 7zip package provides the `7z` command used by SphinxPi. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
 
 **Password note:** AES-256 is used for password-protected ZIP and 7Z archives through 7-Zip. Passwords are requested interactively rather than placed directly in the command line. TAR-based formats do not support built-in password encryption. Keep your password safe; encrypted archives cannot be recovered if it is lost.
 
