@@ -33,6 +33,12 @@ Usage:
   sphinx services         Open Service Manager
   sphinx logs             Open Log Viewer
   sphinx apps             Search and install 100+ Debian apps
+  sphinx monitor          Open Resource Monitor
+  sphinx backup           Open Backup Manager
+  sphinx network          Open Network Manager
+  sphinx services         Open Service Manager
+  sphinx logs             Open Log Viewer
+  sphinx apps             Search and install 100+ Debian apps
   sphinx uninstall        Remove SphinxPi (add -f for full system removal)
   sphinx ui               Open the SphinxPi management menu
 
