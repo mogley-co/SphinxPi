@@ -36,7 +36,7 @@ Build it from a checkout:
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
 sh scripts/build-deb.sh
-sudo apt install ./dist/sphinxpi_0.3.0_all.deb
+sudo apt install ./dist/sphinxpi_0.3.1_all.deb
 ```
 
 Or build and install in one step:
