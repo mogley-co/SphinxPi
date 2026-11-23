@@ -89,14 +89,16 @@ choose_format() {
             seven "7Z (high compression, AES-256 password option)" \
             tar "TAR (no compression)" \
             targz "TAR.GZ" \
-            tarbz2 "TAR.BZ2" 3>&1 1>&2 2>&3
+            tarbz2 "TAR.BZ2" \
+            tarzst "TAR.ZST (Zstandard)" \
+            tarlz4 "TAR.LZ4" 3>&1 1>&2 2>&3
     else
-        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.BZ2" >&2
+        echo "Formats: 1 ZIP | 2 ZIP AES-256 | 3 7Z | 4 TAR | 5 TAR.GZ | 6 TAR.BZ2 | 7 TAR.ZST | 8 TAR.LZ4" >&2
         printf "Format: " >&2
         IFS= read -r f || return 1
         case "$f" in
             1) echo zip ;; 2) echo zipaes ;; 3) echo seven ;; 4) echo tar ;;
-            5) echo targz ;; 6) echo tarbz2 ;;
+            5) echo targz ;; 6) echo tarbz2 ;; 7) echo tarzst ;; 8) echo tarlz4 ;;
             *) echo "" ;;
         esac
     fi
@@ -129,6 +131,8 @@ create_archive() {
         tar) ext=".tar" ;;
         targz) ext=".tar.gz" ;;
         tarbz2) ext=".tar.bz2" ;;
+        tarzst) ext=".tar.zst" ;;
+        tarlz4) ext=".tar.lz4" ;;
         *) message "Unknown format."; return 0 ;;
     esac
 
@@ -192,6 +196,12 @@ create_archive() {
         tarbz2)
             if tar -I "bzip2 -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.BZ2 creation failed."; return 0; fi
             ;;
+        tarzst)
+            if tar -I "zstd -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.ZST creation failed."; return 0; fi
+            ;;
+        tarlz4)
+            if tar -I "lz4 -$level" -cf "$output" -C "$(dirname "$source")" -- "$(basename "$source")"; then :; else rm -f -- "$output"; message "TAR.LZ4 creation failed."; return 0; fi
+            ;;
     esac
 
     if [ -f "$output" ]; then
@@ -230,11 +240,11 @@ extract_archive() {
     fi
 
     case "$archive" in
-        *.zip|*.7z)
+        *.zip|*.7z|*.rar)
             if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
-            if 7z x "-o$dest" "$archive"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Check the archive and password."; fi
+            if 7z x "-o$dest" "$archive"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. For RAR files, the optional 7zip-rar plugin may be required."; fi
             ;;
-        *.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2)
+        *.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.zst|*.tzst|*.tar.lz4|*.tlz4)
             if tar --no-same-owner --no-same-permissions -xf "$archive" -C "$dest"; then message "Extraction finished.\nDestination: $dest"; else message "Extraction failed. Do not use files from an untrusted archive."; fi
             ;;
         *) message "Unknown extension. Supported: zip, 7z, tar, tar.gz and tar.bz2."; return 0 ;;
@@ -259,6 +269,15 @@ list_archive() {
         *.tar.bz2|*.tbz2)
             if tar -tjf "$archive"; then pause_output; else message "Could not list this archive."; fi
             ;;
+        *.tar.zst|*.tzst)
+            if tar -I zstd -tf "$archive"; then pause_output; else message "Could not list this archive."; fi
+            ;;
+        *.tar.lz4|*.tlz4)
+            if tar -I lz4 -tf "$archive"; then pause_output; else message "Could not list this archive."; fi
+            ;;
+        *.rar)
+            if 7z l "$archive"; then pause_output; else message "Could not list this RAR archive. The optional 7zip-rar plugin may be required."; fi
+            ;;
         *) message "Unsupported archive extension."; return 0 ;;
     esac
 }
@@ -268,15 +287,21 @@ test_archive() {
     [ -n "$archive" ] || return 0
     [ -f "$archive" ] || { message "Archive not found."; return 0; }
     case "$archive" in
-        *.zip|*.7z)
+        *.zip|*.7z|*.rar)
             if ! command -v 7z >/dev/null 2>&1; then message "7-Zip is required. Run: sudo sphinx archive-install (or log in as root and run sphinx archive-install)"; return 0; fi
-            if 7z t "$archive"; then message "Archive integrity test passed."; else message "Archive test FAILED. The file may be damaged or the password may be incorrect."; fi
+            if 7z t "$archive"; then message "Archive integrity test passed."; else message "Archive test FAILED. The file may be damaged, the password may be incorrect, or the RAR plugin may be missing."; fi
             ;;
         *.tar.gz|*.tgz)
             if gzip -t "$archive" && tar -tzf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
             ;;
         *.tar.bz2|*.tbz2)
             if bzip2 -t "$archive" && tar -tjf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
+            ;;
+        *.tar.zst|*.tzst)
+            if zstd -t "$archive" && tar -I zstd -tf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
+            ;;
+        *.tar.lz4|*.tlz4)
+            if lz4 -t "$archive" && tar -I lz4 -tf "$archive" >/dev/null; then message "Archive integrity test passed."; else message "Archive integrity test FAILED."; fi
             ;;
         *.tar)
             if tar -tf "$archive" >/dev/null; then message "TAR listing completed; TAR has no built-in checksum."; else message "TAR read failed."; fi
