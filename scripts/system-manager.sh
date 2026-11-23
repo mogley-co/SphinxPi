@@ -77,7 +77,7 @@ backup_manager() {
                 case "$source" in /*) ;; *) source="$PWD/$source" ;; esac
                 case "$dest" in /*) ;; *) dest="$PWD/$dest" ;; esac
                 [ -d "$source" ] || { message "Source folder does not exist."; continue; }
-                [ ! -e "$dest" ] || { message "Backup file already exists. Choose a new filename; existing backups are never overwritten."; continue; }
+                [ ! -e "$dest" ] && [ ! -L "$dest" ] || { message "Backup file already exists. Choose a new filename; existing backups are never overwritten."; continue; }
                 source_real=$(realpath -e -- "$source") || { message "Cannot resolve source folder."; continue; }
                 dest_parent=$(dirname -- "$dest")
                 [ -d "$dest_parent" ] || { message "Backup destination folder does not exist."; continue; }
@@ -214,12 +214,11 @@ apps_manager() {
                 printf '%s %s %s\n' "$package" "$category" "$description" | grep -qiF -- "$query" || continue
             fi
             if installed_package "$package"; then
-                state="ON"
                 label="[INSTALLED] $description ($category)"
             else
-                state="OFF"
                 label="[not installed] $description ($category)"
             fi
+            state="OFF"
             printf '%s\t%s\t%s\n' "$package" "$label" "$state" >> "$tmp"
         done < "$CATALOG"
         if [ ! -s "$tmp" ]; then
