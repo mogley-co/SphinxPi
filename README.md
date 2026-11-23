@@ -69,7 +69,8 @@ sphinx desktop-layout
 
 ## Archive Manager
 
-Install the optional archive tools:
+Archive Manager dependencies are installed automatically by `sphinx update`.
+You can also install or repair them separately:
 
 ```sh
 sphinx archive-install  # as root; use sudo from a normal user account
@@ -86,7 +87,7 @@ When launched through sudo, it runs the interactive manager as the original
 sudo user so files created by the manager are not unnecessarily owned by root.
 When logged in directly as root, it runs as root.
 
-The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2 creation; extraction; content listing; and archive testing. When replacing an existing archive, SphinxPi builds a temporary file first and only replaces the old archive after successful creation. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. The installer installs and verifies all required tools (`whiptail`, `zip`, `unzip`, `7zip`, `tar`, `gzip` and `bzip2`), so the manager does not depend on these utilities already being present. Debian's 7zip package provides the `7z` command used by SphinxPi. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
+The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2, TAR.ZST and TAR.LZ4 creation; extraction; content listing; and archive testing. RAR archives can be extracted, listed and tested when the optional Debian `7zip-rar` plugin is available from the configured APT repositories. RAR creation is not supported by 7-Zip. When replacing an existing archive, SphinxPi builds a temporary file first and only replaces the old archive after successful creation. It lets you choose the output path and compression level, then reports the resulting file size. It uses whiptail menus when available and a numbered text menu as a fallback. The installer and updater install and verify the required tools (`whiptail`, `zip`, `unzip`, `7zip`, `tar`, `gzip`, `bzip2`, `zstd` and `lz4`), so the manager does not depend on these utilities already being present. Debian's 7zip package provides the `7z` command used by SphinxPi. The optional `7zip-rar` plugin is installed automatically only when it is available in the configured repositories. Extraction is restricted to an empty destination folder to reduce the risk of overwriting existing files.
 
 **Password note:** AES-256 is used for password-protected ZIP and 7Z archives through 7-Zip. Passwords are requested interactively rather than placed directly in the command line. TAR-based formats do not support built-in password encryption. Keep your password safe; encrypted archives cannot be recovered if it is lost.
 
@@ -105,12 +106,12 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 - `sphinx help`
 - `sphinx info`
 - `sphinx version`
-- `sphinx update` (downloads and installs the latest GitHub version)
+- `sphinx update` (downloads and installs the latest GitHub version and Archive Manager dependencies)
 - `sphinx network-check`
 - `sphinx desktop-install` (run as root; use `sudo` from a normal account)
 - `sphinx desktop`
 - `sphinx desktop-layout`
-- `sphinx archive-install` (run as root; use `sudo` from a normal account)
+- `sphinx archive-install` (install or repair Archive Manager dependencies; run as root or use `sudo`)
 - `sphinx archive`
 - `sphinx uninstall` (uses Debian's package manager)
 
@@ -143,4 +144,4 @@ or partitions are changed.
 - `sphinx uninstall` removes only the SphinxPi package.
 - `sphinx uninstall -f` purges SphinxPi, removes optional packages recorded as newly installed by SphinxPi, and deletes its system state/configuration.
 
-Full removal keeps the home directory, personal files, and a cloned `~/SphinxPi` source repository. It does not run global `apt autoremove`. Package tracking applies to optional desktop/archive installs made after this version; older installs have no reliable manifest and are left untouched.
+Full removal keeps the home directory, personal files, and a cloned `~/SphinxPi` source repository. It does not run global `apt autoremove`. Archive dependencies installed by `sphinx update` or `sphinx archive-install` are recorded in the package manifest and removed by full removal only if SphinxPi installed them. Packages that were already present are preserved. Older installs without a reliable manifest are left untouched.
