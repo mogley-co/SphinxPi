@@ -13,12 +13,16 @@ Usage:
   sphinx help             Show this help
   sphinx version          Show SphinxPi version
   sphinx info             Show system and hardware information
+  sphinx network-check    Diagnose network, DNS and Debian HTTPS access
   sudo sphinx desktop-install
                           Install the lightweight LXDE desktop
   sphinx desktop          Start LXDE from a normal user account
   sphinx desktop-layout   Move the LXPanel to the top
+  sudo sphinx archive-install
+                          Install archive tools and the terminal menu
+  sphinx archive          Open the interactive Archive Manager
 
-The desktop is optional. The text login remains available.
+The desktop and archive tools are optional. The text login remains available.
 EOF
 }
 
@@ -48,10 +52,62 @@ show_info() {
     df -h /
 }
 
+network_check() {
+    echo "SphinxPi network diagnostics (read-only)"
+    echo "========================================"
+    echo
+    echo "[Clock]"
+    date
+    echo
+    echo "[Default route]"
+    if command -v ip >/dev/null 2>&1; then
+        ip route show default || true
+    else
+        echo "ip command unavailable"
+    fi
+    echo
+    echo "[DNS: deb.debian.org]"
+    if command -v getent >/dev/null 2>&1; then
+        getent ahosts deb.debian.org || echo "DNS lookup failed"
+    else
+        echo "getent unavailable"
+    fi
+    echo
+    echo "[HTTPS over IPv4]"
+    if command -v curl >/dev/null 2>&1; then
+        curl -4 -I --connect-timeout 8 --max-time 12 https://deb.debian.org/debian/ || echo "IPv4 HTTPS test failed"
+    else
+        echo "curl unavailable; install it with: sudo apt install curl"
+    fi
+    echo
+    echo "[APT source entries]"
+    if [ -r /etc/apt/sources.list ]; then
+        grep -Ev '^[[:space:]]*(#|$)' /etc/apt/sources.list || true
+    fi
+    if [ -d /etc/apt/sources.list.d ]; then
+        grep -RhsEv '^[[:space:]]*(#|$)' /etc/apt/sources.list.d --include='*.list' --include='*.sources' 2>/dev/null || true
+    fi
+    echo
+    echo "No network or repository settings were changed."
+}
+
 case "${1:-help}" in
     help|-h|--help) show_help ;;
     version|-v|--version) echo "SphinxPi $VERSION" ;;
     info) show_info ;;
+    network-check) network_check ;;
+    archive-install)
+        [ -x /usr/lib/sphinxpi/archive-install.sh ] || { echo "Archive installer missing. Reinstall SphinxPi CLI."; exit 1; }
+        exec /usr/lib/sphinxpi/archive-install.sh
+        ;;
+    archive)
+        if [ "$(id -u)" -eq 0 ]; then
+            echo "Run the Archive Manager as your normal user, not root."
+            exit 1
+        fi
+        [ -x /usr/lib/sphinxpi/archive-manager.sh ] || { echo "Archive Manager missing. Run: sudo sphinx archive-install"; exit 1; }
+        exec /usr/lib/sphinxpi/archive-manager.sh
+        ;;
     desktop-install)
         [ -x /usr/lib/sphinxpi/desktop-install.sh ] || { echo "Desktop installer missing. Reinstall SphinxPi CLI."; exit 1; }
         exec /usr/lib/sphinxpi/desktop-install.sh
