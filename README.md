@@ -29,7 +29,7 @@ Build it from a checkout:
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
 sh scripts/build-deb.sh
-sudo apt install ./dist/sphinxpi_VERSION_all.deb
+sudo apt install ./dist/sphinxpi_0.2.0_all.deb
 ```
 
 Or build and install in one step:
@@ -154,6 +154,8 @@ This checks the system clock, default route, DNS resolution for Debian, HTTPS co
 - `sphinx desktop-layout`
 - `sphinx archive-install` (install or repair Archive Manager dependencies; run as root or use `sudo`)
 - `sphinx archive`
+- `sphinx dev` (open the Development Manager)
+- `sphinx python`, `sphinx node`, `sphinx tools`, `sphinx doctor`
 - `sphinx uninstall` (uses Debian's package manager)
 
 ## Uninstall
