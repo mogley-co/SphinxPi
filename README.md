@@ -6,7 +6,7 @@ A lightweight, safety-first custom OS layer for the original Raspberry Pi Zero f
 
 ## Base image
 
-SphinxPi v0.1.0 is based on the official DietPi Raspberry Pi 1 / Zero ARMv6 Debian 13 (Trixie) image.
+SphinxPi is based on the official DietPi Raspberry Pi 1 / Zero ARMv6 Debian 13 (Trixie) image.
 
 - Image: [DietPi_RPi1-ARMv6-Trixie.img.xz](https://github.com/mogley-co/SphinxPi/releases/download/v0.1.0/DietPi_RPi1-ARMv6-Trixie.img.xz)
 - Release asset SHA-256: `f95e0315df7d28d3514aaa03fd28759d5afd4666d7b3a358dd9269bdde93f79e`
@@ -29,7 +29,7 @@ Build it from a checkout:
 git clone https://github.com/mogley-co/SphinxPi.git
 cd SphinxPi
 sh scripts/build-deb.sh
-sudo apt install ./dist/sphinxpi_0.1.2_all.deb
+sudo apt install ./dist/sphinxpi_VERSION_all.deb
 ```
 
 Or build and install in one step:
@@ -91,6 +91,47 @@ The menu supports ZIP, AES-256 encrypted ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2, TAR.ZST 
 
 **Password note:** AES-256 is used for password-protected ZIP and 7Z archives through 7-Zip. Passwords are requested interactively rather than placed directly in the command line. TAR-based formats do not support built-in password encryption. Keep your password safe; encrypted archives cannot be recovered if it is lost.
 
+## Development Manager
+
+Open the interactive Development Manager from the main Control Center:
+
+```sh
+sphinx dev
+# or open the full SphinxPi menu:
+sphinx ui
+```
+
+The manager uses the same lightweight Whiptail terminal interface as the
+Archive Manager. It includes:
+
+- **Python Manager:** install or repair Debian's Python 3, venv, pip and pipx
+  packages; inspect versions; create virtual environments; and install PyPI
+  packages inside an existing virtual environment.
+- **Node.js Manager:** install or repair Node.js and npm from the configured
+  Debian repositories; inspect versions and globally installed npm packages.
+- **Developer Tools:** install or update Git, build-essential, Make, CMake,
+  Nano and the OpenSSH client.
+- **System Doctor:** inspect architecture, memory, root filesystem space and
+  whether common development commands are available.
+
+You can open individual sections directly with `sphinx python`,
+`sphinx node`, `sphinx tools` and `sphinx doctor`.
+
+Python packages are installed inside virtual environments rather than into
+Debian's externally managed system Python. Create an environment from the
+Python Manager, then install packages into that environment. The Node.js
+manager uses Debian's APT packages rather than assuming that upstream Node.js
+binaries support ARMv6. Every APT installation checks whether a package
+candidate exists for the configured architecture and records newly installed
+packages for SphinxPi's full-removal process. The manager does not silently
+install a full compiler or runtime during a normal SphinxPi update.
+
+**ARMv6 note:** the original Pi Zero uses a 32-bit ARMv6 CPU and 512 MB RAM.
+Availability and versions of Node.js, pipx and other packages depend on the
+Debian Trixie `armel` repositories configured on the device. The manager
+checks APT candidates before installation; it cannot make an incompatible
+upstream binary run on ARMv6.
+
 ## Network diagnostics
 
 Run:
@@ -140,7 +181,7 @@ or partitions are changed.
 ### Management UI and full removal
 
 - `sphinx ui` opens the whiptail management menu.
-- `sphinx update` asks for confirmation before installing the latest GitHub version.
+- `sphinx update` asks for confirmation before installing the latest GitHub version and Archive Manager dependencies.
 - `sphinx uninstall` removes only the SphinxPi package.
 - `sphinx uninstall -f` purges SphinxPi, removes optional packages recorded as newly installed by SphinxPi, and deletes its system state/configuration.
 
