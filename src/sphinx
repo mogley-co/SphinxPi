@@ -37,12 +37,14 @@ run_helper() {
     helper=$1
     shift
     path="$LIB_DIR/$helper"
-    if [ ! -x "$path" ]; then
-        echo "SphinxPi helper is missing: $path" >&2
+    if [ ! -r "$path" ]; then
+        echo "SphinxPi helper is missing or unreadable: $path" >&2
         echo "Repair the package with: sudo apt install --reinstall sphinxpi" >&2
         exit 1
     fi
-    exec "$path" "$@"
+    # Run through /bin/sh instead of executing the helper directly. This
+    # also works on systems where /usr is mounted with the noexec option.
+    exec sh "$path" "$@"
 }
 
 case "${1:-help}" in
@@ -119,7 +121,7 @@ case "${1:-help}" in
                 echo "Could not determine the home directory for sudo user '$SUDO_USER'." >&2
                 exit 1
             fi
-            exec runuser -u "$SUDO_USER" -- env HOME="$user_home" "$LIB_DIR/archive-manager.sh"
+            exec runuser -u "$SUDO_USER" -- env HOME="$user_home" sh "$LIB_DIR/archive-manager.sh"
         fi
         run_helper archive-manager.sh
         ;;
@@ -127,8 +129,8 @@ case "${1:-help}" in
         mode=normal
         if [ "${2:-}" = "-f" ] || [ "${2:-}" = "--full" ]; then mode=full
         elif [ -n "${2:-}" ]; then echo 'Usage: sphinx uninstall [-f|--full]'; exit 2; fi
-        if [ "$(id -u)" -eq 0 ]; then exec "$LIB_DIR/remove.sh" "$mode"
-        elif command -v sudo >/dev/null 2>&1; then exec sudo "$LIB_DIR/remove.sh" "$mode"
+        if [ "$(id -u)" -eq 0 ]; then exec sh "$LIB_DIR/remove.sh" "$mode"
+        elif command -v sudo >/dev/null 2>&1; then exec sudo sh "$LIB_DIR/remove.sh" "$mode"
         else echo 'Use: sudo sphinx uninstall [-f]'; exit 1; fi
         ;;
     ui)
