@@ -1,0 +1,161 @@
+# package|category|description
+git|Development|Version control
+build-essential|Development|Compiler and build tools
+gcc|Development|GNU C compiler
+g++|Development|GNU C++ compiler
+make|Development|Build automation
+cmake|Development|Cross-platform build system
+ninja-build|Development|Fast build system
+meson|Development|Build system
+pkg-config|Development|Library build flags
+autoconf|Development|Configure scripts
+automake|Development|Build scripts
+libtool|Development|Library tools
+gdb|Development|Debugger
+strace|Development|System call tracer
+ltrace|Development|Library call tracer
+binutils|Development|Binary utilities
+patch|Development|Patch utility
+diffutils|Development|Diff tools
+clang|Development|Clang compiler
+lldb|Development|LLVM debugger
+python3|Development|Python runtime
+python3-pip|Development|Python package installer
+python3-venv|Development|Python virtual environments
+pipx|Development|Isolated Python applications
+python3-dev|Development|Python headers
+python3-setuptools|Development|Python packaging tools
+nodejs|Development|Node.js runtime
+npm|Development|Node package manager
+default-jdk|Development|Java development kit
+golang|Development|Go compiler
+rustc|Development|Rust compiler
+cargo|Development|Rust package manager
+ruby|Development|Ruby runtime
+php-cli|Development|PHP command line
+php-curl|Development|PHP cURL extension
+perl|Development|Perl runtime
+sqlite3|Development|SQLite database CLI
+mariadb-client|Development|MariaDB client
+postgresql-client|Development|PostgreSQL client
+redis-tools|Development|Redis command line tools
+nano|Editors|Nano text editor
+vim-tiny|Editors|Vi text editor
+vim|Editors|Vim editor
+neovim|Editors|Neovim editor
+micro|Editors|Micro terminal editor
+emacs-nox|Editors|Emacs terminal editor
+joe|Editors|Joe text editor
+mc|File tools|Midnight Commander file manager
+ranger|File tools|Terminal file manager
+nnn|File tools|Small terminal file manager
+tree|File tools|Directory tree viewer
+ncdu|File tools|Disk usage browser
+duf|File tools|Disk free viewer
+rclone|File tools|Cloud and remote file sync
+rsync|File tools|File synchronization
+fd-find|File tools|Fast file finder
+ripgrep|File tools|Fast text search
+fzf|File tools|Fuzzy finder
+findutils|File tools|File search utilities
+coreutils|File tools|GNU core utilities
+moreutils|File tools|Extra Unix utilities
+file|File tools|File type detector
+jq|File tools|JSON processor
+yq|File tools|YAML processor
+curl|Network|HTTP transfer tool
+wget|Network|Download utility
+openssh-client|Network|SSH client
+openssh-server|Network|SSH server
+sshpass|Network|SSH password helper
+net-tools|Network|ifconfig and netstat
+iproute2|Network|IP and route tools
+dnsutils|Network|DNS lookup tools
+iputils-ping|Network|Ping utility
+traceroute|Network|Route tracing
+mtr-tiny|Network|Network path diagnostics
+nmap|Network|Network discovery utility
+tcpdump|Network|Packet capture
+socat|Network|Socket relay
+netcat-openbsd|Network|Netcat utility
+ethtool|Network|Ethernet diagnostics
+wireless-tools|Network|Wireless utilities
+iw|Network|Wi-Fi configuration tool
+rfkill|Network|Radio device controls
+avahi-utils|Network|Local network discovery
+whois|Network|WHOIS lookup
+aria2|Network|Multi-source downloader
+iperf3|Network|Network speed testing
+btop|Monitoring|Resource monitor
+htop|Monitoring|Process monitor
+sysstat|Monitoring|System activity tools
+iotop|Monitoring|Disk I/O monitor
+iftop|Monitoring|Network traffic monitor
+nethogs|Monitoring|Per-process network monitor
+vnstat|Monitoring|Network traffic statistics
+lm-sensors|Monitoring|Hardware sensor readings
+smartmontools|Monitoring|Disk health tools
+lsof|Monitoring|Open file inspector
+psmisc|Monitoring|Process utilities
+procps|Monitoring|Process and system utilities
+screen|Terminal|Terminal multiplexer
+tmux|Terminal|Terminal multiplexer
+byobu|Terminal|Terminal session manager
+whiptail|Terminal|Terminal dialog interface
+dialog|Terminal|Terminal UI toolkit
+zsh|Terminal|Z shell
+fish|Terminal|Fish shell
+bash-completion|Terminal|Shell completions
+man-db|Terminal|Manual pages
+less|Terminal|Terminal pager
+dos2unix|Terminal|Text line-ending converter
+expect|Terminal|Interactive command automation
+zip|Archives|ZIP archive creator
+unzip|Archives|ZIP extractor
+7zip|Archives|7-Zip archive tools
+p7zip-full|Archives|7-Zip compatibility package
+tar|Archives|TAR archive tools
+gzip|Archives|Gzip compression
+bzip2|Archives|Bzip2 compression
+xz-utils|Archives|XZ compression
+zstd|Archives|Zstandard compression
+lz4|Archives|LZ4 compression
+unrar-free|Archives|RAR extractor
+zlib1g|Archives|Compression library
+sqlitebrowser|Databases|SQLite database browser
+sqlite3|Databases|SQLite database CLI
+mariadb-server|Databases|MariaDB database server
+postgresql|Databases|PostgreSQL database server
+redis-server|Databases|Redis server
+mosquitto-clients|IoT|MQTT command line clients
+mosquitto|IoT|MQTT message broker
+python3-gpiozero|IoT|Raspberry Pi GPIO library
+python3-serial|IoT|Serial port library
+i2c-tools|IoT|I2C bus utilities
+raspi-config|Raspberry Pi|Raspberry Pi configuration utility
+rpi-eeprom|Raspberry Pi|Raspberry Pi EEPROM tools
+avahi-daemon|Network services|mDNS service
+chrony|System|Time synchronization
+ntpsec|System|Network time service
+ufw|Security|Uncomplicated firewall
+fail2ban|Security|Login protection service
+apparmor-utils|Security|AppArmor utilities
+debsums|System|Installed package checksum checker
+aptitude|System|APT terminal frontend
+apt-file|System|Search package file contents
+needrestart|System|Service restart checker
+locales|System|Language locale support
+fonts-dejavu-core|Desktop|Basic DejaVu fonts
+xterm|Desktop|Terminal emulator
+lxterminal|Desktop|LXDE terminal
+pcmanfm|Desktop|File manager
+mousepad|Desktop|Lightweight text editor
+feh|Desktop|Image viewer
+scrot|Desktop|Screenshot utility
+mpv|Media|Media player
+ffmpeg|Media|Audio and video tools
+flac|Media|FLAC audio tools
+sox|Media|Audio processing tools
+imagemagick|Media|Image conversion tools
+fbv|Media|Framebuffer image viewer
+python3-pil|Media|Python image library
